@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.DS_Store
+.vscode/
+.idea/
+render_out/*.png
+render_previews/*.png
+*.blend1
+*.blend@
+
+# Blender source files (root) — only the optimised .glb in web/public/ ships
+/dnagolden.glb
+/esfera.glb
+/esfera.original.bak.glb
+
+# Original/backup glb assets — shipped versions live alongside without .original
+**/*.original.bak.glb
+
+# Vercel
+.vercel
+.env
+.env.local
