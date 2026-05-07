@@ -47,7 +47,14 @@ function Orb({ targetRef }) {
     if (!Number.isFinite(w.x) || !Number.isFinite(w.y)) return
 
     meshRef.current.position.set(w.x, w.y, 0)
-    const s = 0.22 * sz * op
+    // Base scale tracks viewport width so the orb stays a similar relative
+    // size across phones / tablets / desktop. Matches the responsive sizing
+    // applied to the hero sphere.
+    const baseScale = size.width <= 480 ? 0.13
+      : size.width <= 768 ? 0.15
+      : size.width <= 1024 ? 0.18
+      : 0.22
+    const s = baseScale * sz * op
     meshRef.current.scale.setScalar(Math.max(0.0001, s))
     meshRef.current.visible = op > 0.01
 

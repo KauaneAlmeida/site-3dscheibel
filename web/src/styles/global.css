@@ -252,14 +252,33 @@ a, button {
   display: block;
 }
 @media (hover: none), (pointer: coarse) {
+  /* Shrink the sphere's interactive footprint to a centred band so the user
+     has clear top and bottom areas for scroll. Inside the band, vertical
+     swipes still scroll (touch-action: pan-y); above and below the band
+     scroll passes straight to the page without ever touching the canvas. */
+  .sphere-hero {
+    inset: 25vh 0 25vh 0;
+    cursor: auto !important;
+  }
   .sphere-hero,
   .sphere-hero__canvas,
   .sphere-hero canvas {
-    cursor: auto !important;
-    /* iOS gesture contract: vertical swipe = page scroll (browser owns it,
-       Three.js never sees it), horizontal/diagonal drag = sphere rotation.
-       Without this the canvas grabs every touch and the page can't scroll. */
     touch-action: pan-y !important;
+  }
+}
+/* Small phones (≤480): OrbitControls is NOT mounted (locked isometric spin),
+   so the canvas is transparent to every touch — page scroll only. The sphere
+   also extends back to the full hero so the visual covers more of the
+   limited viewport. */
+@media (max-width: 480px) {
+  .sphere-hero {
+    inset: 0 !important;
+    pointer-events: none !important;
+  }
+  .sphere-hero__canvas,
+  .sphere-hero canvas {
+    pointer-events: none !important;
+    touch-action: auto !important;
   }
 }
 
