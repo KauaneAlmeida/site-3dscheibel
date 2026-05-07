@@ -256,6 +256,10 @@ a, button {
   .sphere-hero__canvas,
   .sphere-hero canvas {
     cursor: auto !important;
+    /* iOS gesture contract: vertical swipe = page scroll (browser owns it,
+       Three.js never sees it), horizontal/diagonal drag = sphere rotation.
+       Without this the canvas grabs every touch and the page can't scroll. */
+    touch-action: pan-y !important;
   }
 }
 
