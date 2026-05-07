@@ -227,17 +227,14 @@ a, button {
   background: var(--bg-void);
 }
 
-/* Sphere 3D — centered, fills hero, interactive (drag to rotate).
-   touch-action: pan-y lets vertical scroll pass through (page scroll keeps
-   working on trackpads/touch), while horizontal/multi-finger gestures still
-   reach OrbitControls so the user can rotate the sphere. */
+/* Sphere 3D — centered, fills hero, interactive (drag to rotate). */
 .sphere-hero {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: auto !important;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
 }
 .sphere-hero:active { cursor: grabbing; }
 .sphere-hero__canvas,
@@ -245,8 +242,22 @@ a, button {
   width: 100% !important;
   height: 100% !important;
   pointer-events: auto !important;
-  touch-action: pan-y !important;
+  touch-action: none !important;
   display: block;
+}
+/* Touch devices: shrink the sphere's interactive zone to a centred square so
+   the user has clear top/bottom areas (around the headline, scroll hint and
+   description) where vertical swipes scroll the page instead of rotating the
+   sphere. The 3D canvas continues to fill the hero visually. */
+@media (hover: none), (pointer: coarse) {
+  .sphere-hero {
+    inset: 22vh 0 22vh 0;
+  }
+  .sphere-hero,
+  .sphere-hero__canvas,
+  .sphere-hero canvas {
+    cursor: auto !important;
+  }
 }
 
 /* Journey Orb — fixed full-screen overlay, traverses the page */

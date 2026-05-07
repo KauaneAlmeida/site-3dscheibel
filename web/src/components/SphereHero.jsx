@@ -102,9 +102,6 @@ export default function SphereHero() {
           rotateSpeed={1.0}
           minPolarAngle={Math.PI * 0.30}
           maxPolarAngle={Math.PI * 0.58}
-          /* One-finger rotates on every device. The CSS `touch-action: pan-y`
-             on .sphere-hero lets vertical swipe still scroll the page; only
-             horizontal drag is captured for sphere rotation. */
           touches={{ ONE: 1 /* TOUCH.ROTATE */ }}
         />
       </Canvas>

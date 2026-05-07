@@ -21,7 +21,7 @@ export default function SectionApp() {
       ScrollTrigger.create({
         trigger: root.current,
         start: 'top top',
-        end: isMobile ? '+=60%' : '+=100%',
+        end: isMobile ? '+=120%' : '+=100%',
         pin: true,
         pinSpacing: true,
         anticipatePin: 1,

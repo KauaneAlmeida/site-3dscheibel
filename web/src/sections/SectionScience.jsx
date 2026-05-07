@@ -29,17 +29,18 @@ export default function SectionScience() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Mobile gets a much shorter pin — 5 viewports of locked scroll feels
-      // broken on phones. Desktop keeps the full cinematic length.
+      // Long pin so the user has plenty of scroll to read each pillar.
+      // Mobile gets a slightly shorter pin but the higher scrub damping keeps
+      // it feeling smooth while still requiring multiple wheel/swipe events.
       const isMobile = window.innerWidth <= 768
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: root.current,
           start: 'top top',
-          end: isMobile ? '+=200%' : '+=400%',
+          end: isMobile ? '+=600%' : '+=700%',
           pin: true,
           pinSpacing: true,
-          scrub: 0.4,
+          scrub: isMobile ? 1.5 : 0.8,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => { sectionProgressRef.current.value = self.progress },
@@ -75,70 +76,69 @@ export default function SectionScience() {
         )
         .to('.dna-scene', { opacity: 1, duration: 0.12, ease: 'sine.inOut' }, 0.12)
 
-      // Pillars — sequential fade-in/out, NO overlaps with each other or the closing.
-      // Each pillar block: enter (0.10) → hold (0.04) → exit (0.10) = 0.24 of timeline.
-      // Slots spaced 0.16 apart so previous pillar fully exits before next enters.
+      // Pillars — sequential fade-in / hold / fade-out, generously paced so
+      // the user can actually READ each pillar while scrubbing. Per pillar:
+      //   reveal (0.10) → HOLD (0.18) → exit (0.10) ≈ 0.38 of the timeline.
+      // Slots spaced 0.22 apart so transitions don't overlap.
       const pillarSlots = [
-        { start: 0.18, name: '.science-pillar--1' },
-        { start: 0.34, name: '.science-pillar--2' },
-        { start: 0.50, name: '.science-pillar--3' },
+        { start: 0.14, name: '.science-pillar--1' },
+        { start: 0.36, name: '.science-pillar--2' },
+        { start: 0.58, name: '.science-pillar--3' },
       ]
       pillarSlots.forEach(({ start, name }) => {
-        // Container fade in (no movement — the mask does the choreography).
+        // Container fade in.
         tl.fromTo(name,
           { opacity: 0 },
-          { opacity: 1, duration: 0.04, ease: 'none' },
+          { opacity: 1, duration: 0.06, ease: 'none' },
           start
         )
         // Decorative line wipes in from the left.
         tl.fromTo(`${name} .science-pillar__line`,
           { scaleX: 0 },
-          { scaleX: 1, duration: 0.14, ease: 'power2.out' },
+          { scaleX: 1, duration: 0.16, ease: 'power2.out' },
           start
         )
-        // Mask reveal — title and body unveil from bottom to top with a small
-        // delay between them. clip-path starts fully closed at the top, then
-        // opens downward as scroll progresses. The text inside also rises a
-        // touch for parallax inside the mask.
+        // Mask reveal — title first, then body. Reveal is slower so the
+        // text appears at a readable pace during scrub.
         tl.fromTo(`${name} .science-pillar__title`,
           { clipPath: 'inset(100% 0% 0% 0%)', y: 16 },
-          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.18, ease: 'power3.out' },
+          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.22, ease: 'power3.out' },
           start + 0.02
         )
         tl.fromTo(`${name} .science-pillar__body`,
           { clipPath: 'inset(100% 0% 0% 0%)', y: 12 },
-          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.18, ease: 'power3.out' },
+          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.22, ease: 'power3.out' },
           start + 0.06
         )
-        // Exit — mask closes again, this time from the top down (mirror).
+        // HOLD — text fully revealed; user can read. No tween here, just dead
+        // timeline space (added implicitly because the exit starts later).
+        // Exit — mask closes from the top.
         tl.to(`${name} .science-pillar__title`,
           { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.10, ease: 'power2.in' },
-          start + 0.14
+          start + 0.30
         )
         tl.to(`${name} .science-pillar__body`,
           { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.10, ease: 'power2.in' },
-          start + 0.16
+          start + 0.32
         )
         tl.to(name,
           { opacity: 0, duration: 0.06, ease: 'none' },
-          start + 0.20
+          start + 0.36
         )
       })
 
-      // Closing headline — starts AFTER pillar 3 has fully exited (0.50 + 0.24 = 0.74)
+      // Closing headline — starts AFTER pillar 3 fully exits (0.58 + 0.36 = 0.94).
+      // Tightened a bit so the closing has room to land before the pin ends.
       tl.fromTo('.science-closing',
         { y: 50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.12, ease: 'sine.inOut' },
-        0.76
+        { y: 0, opacity: 1, duration: 0.10, ease: 'sine.inOut' },
+        0.96
       )
       tl.fromTo('.science-stat',
         { y: 50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.12, stagger: 0.04, ease: 'sine.inOut' },
-        0.82
+        { y: 0, opacity: 1, duration: 0.10, stagger: 0.03, ease: 'sine.inOut' },
+        1.00
       )
-
-      // Hold the final state until pin releases (so transition out is clean)
-      tl.to({}, { duration: 0.20 }, 0.78)
 
       // One-shot intro reveal of the cream-side text
       gsap.from('.science-eyebrow, .science-title, .science-sub, .science-scroll-hint', {
