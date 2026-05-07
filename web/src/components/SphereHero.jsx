@@ -2,11 +2,12 @@
 // A bolinha visual única do site é a JourneyOrb (componente separado), que viaja no scroll.
 // NÃO reintroduzir manipulação de BufferGeometry em runtime — o asset já vem limpo do GLB.
 
-import { Suspense, useRef, useEffect } from 'react'
+import { Suspense, useRef, useEffect, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, Environment, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 useGLTF.preload('/sphere.glb', undefined, undefined, (loader) => {
   loader.setMeshoptDecoder(MeshoptDecoder)
@@ -15,9 +16,13 @@ useGLTF.preload('/sphere.glb', undefined, undefined, (loader) => {
 function Sphere({ autoSpin = false, isometricTilt = false }) {
   const groupRef = useRef()
   const startRef = useRef(performance.now())
-  const { scene } = useGLTF('/sphere.glb', undefined, undefined, (loader) => {
+  const { scene: cachedScene } = useGLTF('/sphere.glb', undefined, undefined, (loader) => {
     loader.setMeshoptDecoder(MeshoptDecoder)
   })
+  // Clone the cached scene per instance so HMR / iOS bfcache navigation
+  // doesn't leave us pointing at a mutated shared object (which presented
+  // as "blank canvas until reload" on iPhone 15 Safari).
+  const scene = useMemo(() => cachedScene.clone(true), [cachedScene])
 
   useEffect(() => {
     // Center & scale only — the GLB is already clean (no pearl/decoration).
@@ -35,6 +40,15 @@ function Sphere({ autoSpin = false, isometricTilt = false }) {
     }
     scene.rotation.x = Math.PI
     startRef.current = performance.now()
+
+    // Sphere just mounted with real geometry — tell ScrollTrigger to
+    // recompute every trigger's offsets against the now-stable layout.
+    // Without this, on first load (especially iPhone 15 Safari), some
+    // triggers stayed at offsets calculated against an empty hero canvas
+    // and required a manual reload to "wake up".
+    requestAnimationFrame(() => {
+      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh()
+    })
   }, [scene])
 
   useFrame(() => {
@@ -55,16 +69,14 @@ function Sphere({ autoSpin = false, isometricTilt = false }) {
       groupRef.current.scale.setScalar(1)
     }
 
-    // Small phones: lock the camera into an isometric-style angle (camera
-    // looking down at ~30°) and spin only horizontally. Matches the look of
-    // the user-provided reference and keeps the ring/hole framing pleasant
-    // on narrow viewports where free orbit feels random.
-    if (isometricTilt) {
-      groupRef.current.rotation.x = -0.5  // ~28° tilt down
-      groupRef.current.rotation.z = 0
-    }
-
+    // Touch devices: keep the sphere upright (no manual tilt) and spin only
+    // around Y so the ring stays horizontal — same framing as the reference
+    // screenshot. The hole on top of the GLB is hidden by the camera angle
+    // because the scene itself was flipped 180° (rotation.x = Math.PI in the
+    // setup effect), so we just need to keep rotating around Y.
     if (autoSpin) {
+      groupRef.current.rotation.x = 0
+      groupRef.current.rotation.z = 0
       groupRef.current.rotation.y += 0.004
     } else {
       groupRef.current.rotation.y += 0.0008
@@ -79,9 +91,14 @@ function Sphere({ autoSpin = false, isometricTilt = false }) {
 }
 
 export default function SphereHero() {
-  // Small phones get a locked isometric tilt + auto-spin (no manual rotation).
-  // Larger devices keep OrbitControls so the user can drag to rotate.
-  const isSmallPhone = typeof window !== 'undefined' && window.innerWidth <= 480
+  // ALL touch devices: locked isometric tilt + auto-spin, no OrbitControls.
+  // After multiple iterations on iOS Safari + Lenis + Three.js conflicts,
+  // mounting OrbitControls on touch always traps page scroll one way or
+  // another. The cleanest working contract is: phones never own pointer
+  // events, the sphere just lives there spinning. Desktop keeps full
+  // OrbitControls (mouse drag, autorotate, polar clamp).
+  const isTouch = typeof window !== 'undefined'
+    && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
 
   return (
     <div className="sphere-hero">
@@ -102,11 +119,11 @@ export default function SphereHero() {
         <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
 
         <Suspense fallback={null}>
-          <Sphere autoSpin={isSmallPhone} isometricTilt={isSmallPhone} />
+          <Sphere autoSpin={isTouch} isometricTilt={isTouch} />
           <Environment preset="night" />
         </Suspense>
 
-        {!isSmallPhone && (
+        {!isTouch && (
           <OrbitControls
             autoRotate
             autoRotateSpeed={0.8}
@@ -117,7 +134,6 @@ export default function SphereHero() {
             rotateSpeed={1.0}
             minPolarAngle={Math.PI * 0.30}
             maxPolarAngle={Math.PI * 0.58}
-            touches={{ ONE: 1 /* THREE.TOUCH.ROTATE */ }}
           />
         )}
       </Canvas>

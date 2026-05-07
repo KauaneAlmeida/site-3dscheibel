@@ -251,28 +251,13 @@ a, button {
   touch-action: none !important;
   display: block;
 }
+/* All touch devices: OrbitControls is not mounted (see SphereHero.jsx).
+   Make the canvas transparent to every gesture so page scroll always works
+   no matter where the finger lands. The sphere is purely visual on phones. */
 @media (hover: none), (pointer: coarse) {
-  /* Shrink the sphere's interactive footprint to a centred band so the user
-     has clear top and bottom areas for scroll. Inside the band, vertical
-     swipes still scroll (touch-action: pan-y); above and below the band
-     scroll passes straight to the page without ever touching the canvas. */
-  .sphere-hero {
-    inset: 25vh 0 25vh 0;
-    cursor: auto !important;
-  }
-  .sphere-hero,
-  .sphere-hero__canvas,
-  .sphere-hero canvas {
-    touch-action: pan-y !important;
-  }
-}
-/* Small phones (≤480): OrbitControls is NOT mounted (locked isometric spin),
-   so the canvas is transparent to every touch — page scroll only. The sphere
-   also extends back to the full hero so the visual covers more of the
-   limited viewport. */
-@media (max-width: 480px) {
   .sphere-hero {
     inset: 0 !important;
+    cursor: auto !important;
     pointer-events: none !important;
   }
   .sphere-hero__canvas,
@@ -2332,13 +2317,13 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
     max-width: none !important;
     padding-top: 0;
   }
-  .science-pillar__title { font-size: clamp(1.2rem, 6vw, 1.8rem); max-width: 18ch; }
-  .science-pillar__body { font-size: 0.84rem; max-width: 36ch; }
-  .science-closing { top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem); max-width: 14ch; line-height: 1.1; }
+  .science-pillar__title { font-size: clamp(1.3rem, 6.5vw, 2rem); max-width: 18ch; color: #fff; }
+  .science-pillar__body { font-size: 0.95rem; max-width: 36ch; color: rgba(255, 255, 255, 0.92); line-height: 1.55; }
+  .science-closing { top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem); max-width: 14ch; line-height: 1.1; color: #fff; }
   .science-stats { right: 5vw; left: 5vw; bottom: 5vh; flex-direction: row; flex-wrap: wrap; gap: 1.4rem; max-width: none; text-align: left; justify-content: space-between; }
   .science-stat { flex: 1 1 30%; }
-  .science-stat__num { font-size: clamp(2rem, 9vw, 2.8rem); margin-bottom: 0.4rem; }
-  .science-stat__label { font-size: 0.72rem; line-height: 1.4; letter-spacing: 0.06em; }
+  .science-stat__num { font-size: clamp(2rem, 9vw, 2.8rem); margin-bottom: 0.4rem; color: #e8c179; }
+  .science-stat__label { font-size: 0.78rem; line-height: 1.4; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.88); }
   .science-scroll-hint { display: none; }
 
   /* App */
