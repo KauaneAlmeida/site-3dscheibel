@@ -30,11 +30,15 @@ export function useLenis(progressRef) {
       || matchMedia('(pointer: coarse)').matches
 
     if (isTouch) {
-      // Native scroll path. Still feed progressRef for any consumers that
-      // expect it, and force a ScrollTrigger.refresh after mount so any
-      // triggers that were created before this hook ran (or against pin
-      // measurements that changed when sphere.glb finished loading) get
-      // their offsets recomputed against the real scroll engine.
+      // Native scroll path on touch. We refresh ScrollTrigger AGGRESSIVELY
+      // because pin offsets depend on layout heights, and on mobile those
+      // heights only stabilise after:
+      //   - the JS bundle parses
+      //   - fonts apply (display: swap can shift baselines)
+      //   - sphere.glb / dna.glb finish streaming (~18MB on first visit)
+      //   - the iOS URL bar collapses on first scroll (changes svh / vh basis)
+      // Without these refreshes, triggers like .screens-wedge keep stale
+      // offsets and never fire until the user reloads the page.
       const onScroll = () => {
         if (progressRef && progressRef.current) {
           const h = document.documentElement.scrollHeight - window.innerHeight
@@ -43,12 +47,37 @@ export function useLenis(progressRef) {
       }
       window.addEventListener('scroll', onScroll, { passive: true })
       onScroll()
-      const refreshId = setTimeout(() => ScrollTrigger.refresh(), 200)
+
+      // Cascade of refreshes so we cover all layout-change moments.
+      const refreshTimers = [
+        setTimeout(() => ScrollTrigger.refresh(), 200),
+        setTimeout(() => ScrollTrigger.refresh(), 800),
+        setTimeout(() => ScrollTrigger.refresh(), 2000),
+      ]
+      const onLoad = () => ScrollTrigger.refresh()
+      window.addEventListener('load', onLoad)
+
+      // ResizeObserver on <body> catches every layout shift (GLB renders,
+      // image decodes, font metric updates). Throttled to one refresh per RAF.
+      let pending = false
+      const ro = new ResizeObserver(() => {
+        if (pending) return
+        pending = true
+        requestAnimationFrame(() => {
+          pending = false
+          ScrollTrigger.refresh()
+        })
+      })
+      ro.observe(document.body)
+
       const onResize = () => ScrollTrigger.refresh()
       window.addEventListener('resize', onResize)
       window.addEventListener('orientationchange', onResize)
+
       return () => {
-        clearTimeout(refreshId)
+        refreshTimers.forEach(clearTimeout)
+        ro.disconnect()
+        window.removeEventListener('load', onLoad)
         window.removeEventListener('scroll', onScroll)
         window.removeEventListener('resize', onResize)
         window.removeEventListener('orientationchange', onResize)
