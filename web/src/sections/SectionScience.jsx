@@ -76,54 +76,66 @@ export default function SectionScience() {
         )
         .to('.dna-scene', { opacity: 1, duration: 0.12, ease: 'sine.inOut' }, 0.12)
 
-      // Pillars — sequential fade-in / hold / fade-out, generously paced so
-      // the user can actually READ each pillar while scrubbing. Per pillar:
-      //   reveal (0.10) → HOLD (0.18) → exit (0.10) ≈ 0.38 of the timeline.
-      // Slots spaced 0.22 apart so transitions don't overlap.
+      // Pillars — strictly sequential. Each block: enter → hold → exit.
+      // Slots are spaced so the previous pillar is FULLY exited (opacity 0,
+      // mask closed) before the next one starts entering. This prevents two
+      // pillars from rendering at the same time on top of each other.
+      //
+      // Per pillar block:
+      //   t+0.00  container opacity 0 → 1 (instant)
+      //   t+0.00  line wipe + title reveal start
+      //   t+0.04  body reveal start
+      //   t+0.20  → text fully revealed (HOLD begins)
+      //   t+0.22  HOLD — user reads
+      //   t+0.22  exit (title clip closes, then body)
+      //   t+0.30  container opacity → 0 (fully gone)
+      // Total slot length: 0.30. Spacing of 0.30 between starts = zero overlap.
       const pillarSlots = [
-        { start: 0.14, name: '.science-pillar--1' },
-        { start: 0.36, name: '.science-pillar--2' },
-        { start: 0.58, name: '.science-pillar--3' },
+        { start: 0.10, name: '.science-pillar--1' },
+        { start: 0.40, name: '.science-pillar--2' },
+        { start: 0.70, name: '.science-pillar--3' },
       ]
       pillarSlots.forEach(({ start, name }) => {
-        // Container fade in.
+        // Container fade in instantly so the mask reveal is what the eye sees.
         tl.fromTo(name,
           { opacity: 0 },
-          { opacity: 1, duration: 0.06, ease: 'none' },
+          { opacity: 1, duration: 0.01, ease: 'none' },
           start
         )
-        // Decorative line wipes in from the left.
+        // Decorative line wipes in.
         tl.fromTo(`${name} .science-pillar__line`,
           { scaleX: 0 },
-          { scaleX: 1, duration: 0.16, ease: 'power2.out' },
+          { scaleX: 1, duration: 0.14, ease: 'power2.out' },
           start
         )
-        // Mask reveal — title first, then body. Reveal is slower so the
-        // text appears at a readable pace during scrub.
+        // Title and body mask reveals.
         tl.fromTo(`${name} .science-pillar__title`,
           { clipPath: 'inset(100% 0% 0% 0%)', y: 16 },
-          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.22, ease: 'power3.out' },
+          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.18, ease: 'power3.out' },
           start + 0.02
         )
         tl.fromTo(`${name} .science-pillar__body`,
           { clipPath: 'inset(100% 0% 0% 0%)', y: 12 },
-          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.22, ease: 'power3.out' },
+          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.18, ease: 'power3.out' },
           start + 0.06
         )
-        // HOLD — text fully revealed; user can read. No tween here, just dead
-        // timeline space (added implicitly because the exit starts later).
-        // Exit — mask closes from the top.
-        tl.to(`${name} .science-pillar__title`,
-          { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.10, ease: 'power2.in' },
+        // HOLD between t+0.24 and t+0.24 (instant — the dwell comes from the
+        // 0.30 slot length; user is reading while scrub progresses).
+        // EXIT — fade the whole container at once. Quick & clean, no
+        // overlapping mask animations with the next pillar's entrance.
+        tl.to(name,
+          { opacity: 0, duration: 0.06, ease: 'power2.in' },
+          start + 0.24
+        )
+        // Reset the inner masks AFTER opacity hits 0 so they're ready to
+        // re-reveal cleanly if the user scrolls back.
+        tl.set(`${name} .science-pillar__title`,
+          { clipPath: 'inset(100% 0% 0% 0%)' },
           start + 0.30
         )
-        tl.to(`${name} .science-pillar__body`,
-          { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.10, ease: 'power2.in' },
-          start + 0.32
-        )
-        tl.to(name,
-          { opacity: 0, duration: 0.06, ease: 'none' },
-          start + 0.36
+        tl.set(`${name} .science-pillar__body`,
+          { clipPath: 'inset(100% 0% 0% 0%)' },
+          start + 0.30
         )
       })
 

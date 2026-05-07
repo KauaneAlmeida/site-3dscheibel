@@ -77,14 +77,10 @@ function Sphere({ autoSpin = false }) {
 }
 
 export default function SphereHero() {
-  // Touch devices: OrbitControls hijacks pointer events and breaks the page
-  // scroll on iOS Safari (touch-action: pan-y is ignored when Three.js calls
-  // preventDefault on pointermove). Solution: don't mount OrbitControls at
-  // all on touch — `autoRotate` lives inside the controls, but the manual
-  // float in <Sphere> keeps the sphere visually alive.
-  const isTouch = typeof window !== 'undefined'
-    && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
-
+  // OrbitControls now mounts on every device. With Lenis disabled on touch
+  // (see useLenis.js) the iOS native scroll engine and Three.js OrbitControls
+  // share the gesture stream cleanly: short / horizontal drag → rotate,
+  // vertical longer drag → page scroll. No more virtualised-scroll fight.
   return (
     <div className="sphere-hero">
       <Canvas
@@ -104,23 +100,22 @@ export default function SphereHero() {
         <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
 
         <Suspense fallback={null}>
-          <Sphere autoSpin={isTouch} />
+          <Sphere />
           <Environment preset="night" />
         </Suspense>
 
-        {!isTouch && (
-          <OrbitControls
-            autoRotate
-            autoRotateSpeed={0.8}
-            enableZoom={false}
-            enablePan={false}
-            enableDamping
-            dampingFactor={0.05}
-            rotateSpeed={1.0}
-            minPolarAngle={Math.PI * 0.30}
-            maxPolarAngle={Math.PI * 0.58}
-          />
-        )}
+        <OrbitControls
+          autoRotate
+          autoRotateSpeed={0.8}
+          enableZoom={false}
+          enablePan={false}
+          enableDamping
+          dampingFactor={0.05}
+          rotateSpeed={1.0}
+          minPolarAngle={Math.PI * 0.30}
+          maxPolarAngle={Math.PI * 0.58}
+          touches={{ ONE: 1 /* THREE.TOUCH.ROTATE */ }}
+        />
       </Canvas>
     </div>
   )

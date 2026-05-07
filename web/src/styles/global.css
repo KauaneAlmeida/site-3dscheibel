@@ -215,20 +215,25 @@ a, button {
 /* ── Hero layout: Scheibel — sphere centered, text on left ── */
 .hero {
   position: relative;
+  /* Use SMALL viewport height so the hero size stays STABLE on iOS Safari.
+     `dvh` resizes when the URL bar shows/hides, which makes Lenis recompute
+     the scroll limit on every wheel/touch tick — that's what was making the
+     page bounce back to the top after a small scroll on the hero. `svh` is
+     the smallest stable size (toolbar visible) and never changes. */
   min-height: 100vh;
-  /* Use dvh on browsers that support it so the hero shrinks when the mobile
-     URL bar collapses, instead of leaving an empty strip at the bottom. */
-  min-height: 100dvh;
+  min-height: 100svh;
   height: 100vh;
-  height: 100dvh;
+  height: 100svh;
   padding: 0;
   overflow: hidden;
   display: block;
   background: var(--bg-void);
 }
 
-/* Sphere 3D — centered, fills hero. Mouse drag (desktop) / 2-finger gesture
-   (touch) to rotate. */
+/* Sphere 3D — centered, fills hero. Drag to rotate on every device.
+   With Lenis disabled on touch, OrbitControls and the iOS native scroll
+   engine share the gesture stream — short drags rotate the sphere, larger
+   vertical swipes scroll the page. */
 .sphere-hero {
   position: absolute;
   inset: 0;
@@ -246,15 +251,10 @@ a, button {
   touch-action: none !important;
   display: block;
 }
-/* Touch devices: keep pointer events ON so OrbitControls receives 2-finger
-   gestures, but use `touch-action: pan-y` so the browser claims any 1-finger
-   vertical swipe for page scroll BEFORE Three.js sees it. This is the gesture
-   contract: 1 finger = scroll, 2 fingers = rotate. */
 @media (hover: none), (pointer: coarse) {
   .sphere-hero,
   .sphere-hero__canvas,
   .sphere-hero canvas {
-    touch-action: pan-y !important;
     cursor: auto !important;
   }
 }
@@ -529,7 +529,7 @@ a, button {
   color: #f3eadb;
   padding: 0;
   height: 100vh;
-  height: 100dvh;
+  height: 100svh;
   perspective: 1500px;
   position: relative;
   isolation: isolate;
@@ -698,7 +698,7 @@ a, button {
   display: block;
   width: 100%;
   height: 100vh;
-  height: 100dvh;
+  height: 100svh;
   background: var(--bg-void);
   /* Isolate stacking context so SectionApp's z-index:5 children can't bleed in
      when both sections are pinned (fixed) at the same scroll moment. */
@@ -2395,7 +2395,8 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .silence-headline { font-size: 1.6rem; line-height: 1.15; }
   .counter { font-size: 1.7rem; }
 
-  .science-pillar--1, .science-pillar--2 { top: 32%; }
+  /* Pillars stay stacked at the centre — same rule as the 768px block, kept
+     here so it isn't overridden by older desktop top% values at this width. */
   .science-stats { gap: 0.6rem; }
   .science-stat__label { letter-spacing: 0.12em; }
 

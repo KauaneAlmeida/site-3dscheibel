@@ -20,15 +20,50 @@ gsap.registerPlugin(ScrollTrigger)
  */
 export function useLenis(progressRef) {
   useEffect(() => {
+    // Mobile/touch devices: skip Lenis entirely and use the browser's native
+    // scroll. iOS Safari's WebKit scroll engine + Three.js OrbitControls play
+    // nicely together at the OS level (different gesture layers), but Lenis's
+    // virtualised scroll fights Three.js for pointer events and ends up
+    // breaking either the scroll OR the rotation. Native scroll on touch
+    // restores both at once. Desktop keeps the smooth-scroll experience.
+    const isTouch = matchMedia('(hover: none)').matches
+      || matchMedia('(pointer: coarse)').matches
+
+    if (isTouch) {
+      // Native scroll path. Still feed progressRef for any consumers that
+      // expect it, and force a ScrollTrigger.refresh after mount so any
+      // triggers that were created before this hook ran (or against pin
+      // measurements that changed when sphere.glb finished loading) get
+      // their offsets recomputed against the real scroll engine.
+      const onScroll = () => {
+        if (progressRef && progressRef.current) {
+          const h = document.documentElement.scrollHeight - window.innerHeight
+          progressRef.current.value = h > 0 ? window.scrollY / h : 0
+        }
+      }
+      window.addEventListener('scroll', onScroll, { passive: true })
+      onScroll()
+      const refreshId = setTimeout(() => ScrollTrigger.refresh(), 200)
+      const onResize = () => ScrollTrigger.refresh()
+      window.addEventListener('resize', onResize)
+      window.addEventListener('orientationchange', onResize)
+      return () => {
+        clearTimeout(refreshId)
+        window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('resize', onResize)
+        window.removeEventListener('orientationchange', onResize)
+      }
+    }
+
+    // Desktop: full Lenis smooth scroll integrated with ScrollTrigger.
     const lenis = new Lenis({
-      duration: 2.0,                                      // longer = slower, smoother glide
+      duration: 2.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      wheelMultiplier: 0.6,                               // less scroll per wheel tick = slower
+      wheelMultiplier: 0.6,
       touchMultiplier: 1.2,
     })
 
-    // Tell ScrollTrigger to read scroll position from Lenis instead of native.
     ScrollTrigger.scrollerProxy(document.documentElement, {
       scrollTop(value) {
         if (arguments.length) lenis.scrollTo(value, { immediate: true })
@@ -40,8 +75,6 @@ export function useLenis(progressRef) {
       pinType: 'transform',
     })
 
-    // Lenis fires on every smoothed scroll tick — feed ScrollTrigger so it stays in sync,
-    // and (if requested) write the progress value into the shared ref for consumers.
     lenis.on('scroll', (e) => {
       ScrollTrigger.update()
       if (progressRef && progressRef.current) {
@@ -50,15 +83,10 @@ export function useLenis(progressRef) {
       }
     })
 
-    const raf = (time) => {
-      lenis.raf(time * 1000)
-    }
+    const raf = (time) => { lenis.raf(time * 1000) }
     gsap.ticker.add(raf)
-    // Disable GSAP's lagSmoothing so it doesn't fight Lenis's own smoothing.
-    // Capture the previous value so we restore the global state on cleanup.
     gsap.ticker.lagSmoothing(0)
 
-    // After mount + fonts/images settle, refresh so all triggers re-measure with the proxy.
     const refreshId = setTimeout(() => ScrollTrigger.refresh(), 200)
     const onResize = () => ScrollTrigger.refresh()
     window.addEventListener('resize', onResize)
@@ -67,13 +95,9 @@ export function useLenis(progressRef) {
       clearTimeout(refreshId)
       window.removeEventListener('resize', onResize)
       gsap.ticker.remove(raf)
-      // Restore GSAP's default lagSmoothing window so it doesn't stay disabled
-      // globally after this hook unmounts (would affect any future GSAP usage).
       gsap.ticker.lagSmoothing(500, 33)
       lenis.destroy()
     }
-    // progressRef is a ref — its identity is stable across renders, so we
-    // intentionally omit it from deps to avoid reinitializing Lenis.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
