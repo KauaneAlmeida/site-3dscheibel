@@ -845,7 +845,8 @@ a, button {
 }
 .science-pillar__line {
   position: absolute;
-  top: 0; left: 0;
+  top: -1.4rem;     /* lifted off the title so it doesn't crowd the text */
+  left: 0;
   width: 80%;
   height: 1px;
   background: #d4a560;
@@ -2310,7 +2311,7 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   }
   .science-pillar__title { font-size: clamp(1.2rem, 6vw, 1.8rem); max-width: 18ch; }
   .science-pillar__body { font-size: 0.84rem; max-width: 36ch; }
-  .science-closing { top: 8vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem); max-width: 14ch; line-height: 1.1; }
+  .science-closing { top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem); max-width: 14ch; line-height: 1.1; }
   .science-stats { right: 5vw; left: 5vw; bottom: 5vh; flex-direction: row; flex-wrap: wrap; gap: 1.4rem; max-width: none; text-align: left; justify-content: space-between; }
   .science-stat { flex: 1 1 30%; }
   .science-stat__num { font-size: clamp(2rem, 9vw, 2.8rem); margin-bottom: 0.4rem; }
