@@ -2115,12 +2115,16 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   /* Closed — slides off the right edge. */
   transform: translateX(100%);
   pointer-events: none;
-  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
+  /* Shadow only when open. While closed, a -20px blurred shadow on a
+     translateX(100%) panel still paints into the visible viewport on the
+     left side, creating a phantom dark blur on mobile. */
+  box-shadow: none;
   transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
 }
 .nav-overlay.is-open {
   transform: translateX(0);
   pointer-events: auto;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
 }
 .nav-overlay__close {
   position: absolute;

@@ -28,7 +28,16 @@ function Sphere({ autoSpin = false }) {
 
     const maxDim = Math.max(size.x, size.y, size.z)
     if (maxDim > 0) {
-      const k = 2.5 / maxDim
+      // World-units target scales with viewport width so the sphere's
+      // on-screen footprint stays consistent across phones, large Samsung
+      // displays in portrait, tablets and desktop.
+      //   ≤480px (small phone)     → 1.4
+      //   ≤768px (large phone)     → 1.6
+      //   ≤1024px (tablet/large)   → 2.0
+      //   >1024px (desktop)        → 2.5
+      const w = window.innerWidth
+      const target = w <= 480 ? 1.4 : w <= 768 ? 1.6 : w <= 1024 ? 2.0 : 2.5
+      const k = target / maxDim
       scene.scale.setScalar(k)
     }
     // Flip 180° so the hole (from the removed ball) sits at the bottom, hidden by the camera angle.
