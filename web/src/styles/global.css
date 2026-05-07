@@ -2310,11 +2310,11 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   }
   .science-pillar__title { font-size: clamp(1.2rem, 6vw, 1.8rem); max-width: 18ch; }
   .science-pillar__body { font-size: 0.84rem; max-width: 36ch; }
-  .science-closing { top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.2rem, 6vw, 1.8rem); max-width: 16ch; }
-  .science-stats { right: 5vw; left: 5vw; bottom: 4vh; flex-direction: row; flex-wrap: wrap; gap: 1rem; max-width: none; text-align: left; justify-content: space-between; }
+  .science-closing { top: 8vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem); max-width: 14ch; line-height: 1.1; }
+  .science-stats { right: 5vw; left: 5vw; bottom: 5vh; flex-direction: row; flex-wrap: wrap; gap: 1.4rem; max-width: none; text-align: left; justify-content: space-between; }
   .science-stat { flex: 1 1 30%; }
-  .science-stat__num { font-size: clamp(1.4rem, 6vw, 2rem); }
-  .science-stat__label { font-size: 0.58rem; }
+  .science-stat__num { font-size: clamp(2rem, 9vw, 2.8rem); margin-bottom: 0.4rem; }
+  .science-stat__label { font-size: 0.72rem; line-height: 1.4; letter-spacing: 0.06em; }
   .science-scroll-hint { display: none; }
 
   /* App */
@@ -2325,8 +2325,9 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
 
   /* Screens — horizontal swipe carousel on mobile (scroll-snap, native).
      Each phone snaps to centre with a generous gap and a slim peek of the
-     neighbours, so the user understands there's more to swipe through. */
-  .screens-wedge { display: none; }
+     neighbours, so the user understands there's more to swipe through.
+     The closing wedge stays visible (handles the diagonal transition into
+     Partners). */
   .screens-head { margin-bottom: 5vh; }
   .screens-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
   .screens-stage {

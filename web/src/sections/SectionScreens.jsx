@@ -10,9 +10,9 @@ gsap.registerPlugin(ScrollTrigger)
  * Mobile: horizontal swipe carousel (CSS scroll-snap, no GSAP transforms).
  */
 const SCREENS = [
-  { variant: 'journal',   label: 'DIÁRIO',   tilt: -10, dx: -22, video: '/frame-01.mp4' },
-  { variant: 'dashboard', label: 'HOJE',     tilt: 0,   dx: 0,   video: '/frame-02.mp4' },
-  { variant: 'protocol',  label: 'PROTOCOLO',tilt: 10,  dx: 22,  video: '/frame-03.mp4' },
+  { variant: 'journal',   label: 'ASSISTENTE',  tilt: -10, dx: -22, video: '/frame-01.mp4' },
+  { variant: 'dashboard', label: 'AGENDAMENTO', tilt: 0,   dx: 0,   video: '/frame-02.mp4' },
+  { variant: 'protocol',  label: 'JORNADA',     tilt: 10,  dx: 22,  video: '/frame-03.mp4' },
 ]
 
 export default function SectionScreens() {
