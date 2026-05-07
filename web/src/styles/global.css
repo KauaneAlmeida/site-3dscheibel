@@ -227,7 +227,8 @@ a, button {
   background: var(--bg-void);
 }
 
-/* Sphere 3D — centered, fills hero, interactive (drag to rotate). */
+/* Sphere 3D — centered, fills hero. Mouse drag (desktop) / 2-finger gesture
+   (touch) to rotate. */
 .sphere-hero {
   position: absolute;
   inset: 0;
@@ -245,17 +246,15 @@ a, button {
   touch-action: none !important;
   display: block;
 }
-/* Touch devices: shrink the sphere's interactive zone to a centred square so
-   the user has clear top/bottom areas (around the headline, scroll hint and
-   description) where vertical swipes scroll the page instead of rotating the
-   sphere. The 3D canvas continues to fill the hero visually. */
+/* Touch devices: keep pointer events ON so OrbitControls receives 2-finger
+   gestures, but use `touch-action: pan-y` so the browser claims any 1-finger
+   vertical swipe for page scroll BEFORE Three.js sees it. This is the gesture
+   contract: 1 finger = scroll, 2 fingers = rotate. */
 @media (hover: none), (pointer: coarse) {
-  .sphere-hero {
-    inset: 22vh 0 22vh 0;
-  }
   .sphere-hero,
   .sphere-hero__canvas,
   .sphere-hero canvas {
+    touch-action: pan-y !important;
     cursor: auto !important;
   }
 }
@@ -2290,9 +2289,21 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .science-title { font-size: clamp(1.8rem, 8vw, 3rem); max-width: 14ch; margin: 0 0 1.4rem; }
   .science-sub { font-size: 0.92rem; max-width: 32ch; }
   .science-eyebrow { font-size: 0.62rem; margin-bottom: 1.6rem; }
-  .science-pillar { left: 5vw !important; right: 5vw !important; max-width: none !important; padding-top: 1rem; }
-  .science-pillar--1, .science-pillar--2 { top: 38%; transform: translateY(-50%); }
-  .science-pillar--3 { top: 18%; right: 5vw; left: 5vw; max-width: none; }
+  /* All three pillars stack at the SAME centred position on mobile, so as the
+     timeline swaps between them via opacity/clip-path they don't overlap each
+     other on screen (the desktop layout uses different `top` values to fan
+     them out, which causes "embolando" overlap on narrow viewports). */
+  .science-pillar,
+  .science-pillar--1,
+  .science-pillar--2,
+  .science-pillar--3 {
+    left: 5vw !important;
+    right: 5vw !important;
+    top: 42% !important;
+    transform: translateY(-50%) !important;
+    max-width: none !important;
+    padding-top: 0;
+  }
   .science-pillar__title { font-size: clamp(1.2rem, 6vw, 1.8rem); max-width: 18ch; }
   .science-pillar__body { font-size: 0.84rem; max-width: 36ch; }
   .science-closing { top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.2rem, 6vw, 1.8rem); max-width: 16ch; }
@@ -2309,21 +2320,22 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .app-eyebrow { top: 5vh; font-size: 0.6rem; }
 
   /* Screens — horizontal swipe carousel on mobile (scroll-snap, native).
-     Lets the user swipe sideways through the three phone mocks. */
-  /* Hide the closing wedge on mobile — its diagonal rise is meant for the
-     desktop transition into Partners and looks broken with a vertical layout. */
+     Each phone snaps to centre with a generous gap and a slim peek of the
+     neighbours, so the user understands there's more to swipe through. */
   .screens-wedge { display: none; }
-  .screens-head { margin-bottom: 4vh; }
+  .screens-head { margin-bottom: 5vh; }
   .screens-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
   .screens-stage {
     flex-direction: row !important;
-    gap: 4vw;
-    overflow-x: auto;
+    gap: 6vw;
+    overflow-x: scroll;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
-    scroll-padding: 0 50%;
     -webkit-overflow-scrolling: touch;
-    padding: 1rem 50% 2rem;
+    /* Symmetric horizontal padding lets first and last items reach centre.
+       Width 220px (mobile phone), so we want ~(viewport - 220) / 2 padding
+       on each side. We use viewport units to stay responsive. */
+    padding: 2rem calc((100vw - 220px) / 2) 3rem;
     margin: 0 -5vw;
     scrollbar-width: none;
     touch-action: pan-x pan-y;
@@ -2374,34 +2386,6 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   /* Hero alt block (legacy) */
   .footer { grid-template-columns: 1fr; gap: 1.2rem; text-align: center; padding: 4vh 5vw; }
 
-  /* Mobile only: orb passes BEHIND the headline on Silence (02) and Science (03).
-     Strategy: keep orb fixed at z-index 40 (visible). Section backgrounds that
-     would cover it become transparent (the body's cream --bg-void shows
-     through). Text elements are bumped to z-index 60 so they stack above the
-     orb. The Science DARK panel (with DNA helix) keeps its dark gradient — we
-     only lift its inner text content above the orb. */
-  .section-silence {
-    background: transparent !important;
-  }
-  .section-silence > * {
-    position: relative;
-    z-index: 60;
-  }
-  /* Science — light intro becomes transparent so orb shows through. */
-  .section-science .science-light {
-    background: transparent !important;
-  }
-  .section-science .science-light > * {
-    position: relative;
-    z-index: 60;
-  }
-  /* Science — dark DNA panel keeps its background, but its inner pillars +
-     closing stack above the orb so the orb feels like it's behind the helix
-     text overlay too. */
-  .section-science .science-pillars,
-  .section-science .science-final {
-    z-index: 60;
-  }
 }
 
 @media (max-width: 480px) {

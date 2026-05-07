@@ -69,6 +69,14 @@ function Sphere() {
 }
 
 export default function SphereHero() {
+  // Touch UX:
+  //   - 1 finger drag → page scrolls (browser owns vertical pan via touch-action)
+  //   - 2 finger gesture → rotates the sphere
+  //   - autoRotate keeps the sphere alive when nobody is touching it
+  // Desktop: standard mouse drag to rotate.
+  const isTouch = typeof window !== 'undefined'
+    && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
+
   return (
     <div className="sphere-hero">
       <Canvas
@@ -97,12 +105,16 @@ export default function SphereHero() {
           autoRotateSpeed={0.8}
           enableZoom={false}
           enablePan={false}
+          enableRotate
           enableDamping
           dampingFactor={0.05}
           rotateSpeed={1.0}
           minPolarAngle={Math.PI * 0.30}
           maxPolarAngle={Math.PI * 0.58}
-          touches={{ ONE: 1 /* TOUCH.ROTATE */ }}
+          touches={isTouch
+            ? { TWO: 2 /* THREE.TOUCH.DOLLY_ROTATE */ }
+            : { ONE: 1 /* THREE.TOUCH.ROTATE */ }
+          }
         />
       </Canvas>
     </div>
