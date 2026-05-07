@@ -3,5 +3,26 @@
   "outputDirectory": "web/dist",
   "installCommand": "cd web && npm install",
   "framework": null,
-  "devCommand": "cd web && npm run dev"
+  "devCommand": "cd web && npm run dev",
+  "headers": [
+    {
+      "source": "/(.*).glb",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Content-Type", "value": "model/gltf-binary" }
+      ]
+    },
+    {
+      "source": "/(.*).(mp4|webm)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).(jpg|jpeg|png|webp|svg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
 }
