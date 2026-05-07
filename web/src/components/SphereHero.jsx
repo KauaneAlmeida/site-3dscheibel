@@ -12,7 +12,7 @@ useGLTF.preload('/sphere.glb', undefined, undefined, (loader) => {
   loader.setMeshoptDecoder(MeshoptDecoder)
 })
 
-function Sphere() {
+function Sphere({ autoSpin = false }) {
   const groupRef = useRef()
   const startRef = useRef(performance.now())
   const { scene } = useGLTF('/sphere.glb', undefined, undefined, (loader) => {
@@ -47,7 +47,7 @@ function Sphere() {
     if (elapsed < introDur) {
       // Smooth eased zoom-in: starts a bit further away + slightly above
       const t = Math.min(1, elapsed / introDur)
-      const eased = 1 - Math.pow(1 - t, 4)        // strong ease-out
+      const eased = 1 - Math.pow(1 - t, 4)
       groupRef.current.position.y = (1 - eased) * 0.8
       groupRef.current.position.z = (1 - eased) * -1.5
       groupRef.current.scale.setScalar(0.6 + eased * 0.4)
@@ -56,8 +56,16 @@ function Sphere() {
       const t = elapsed - introDur
       groupRef.current.position.y = Math.sin(t * 0.6) * 0.08
       groupRef.current.position.z = 0
-      groupRef.current.rotation.y += 0.0008  // very slow auto-rotate adds life
       groupRef.current.scale.setScalar(1)
+    }
+
+    // Auto-spin always — on touch we don't have OrbitControls.autoRotate, so
+    // we drive the rotation here. On desktop autoSpin is false because
+    // OrbitControls already auto-rotates.
+    if (autoSpin) {
+      groupRef.current.rotation.y += 0.004
+    } else {
+      groupRef.current.rotation.y += 0.0008
     }
   })
 
@@ -69,11 +77,11 @@ function Sphere() {
 }
 
 export default function SphereHero() {
-  // Touch UX:
-  //   - 1 finger drag → page scrolls (browser owns vertical pan via touch-action)
-  //   - 2 finger gesture → rotates the sphere
-  //   - autoRotate keeps the sphere alive when nobody is touching it
-  // Desktop: standard mouse drag to rotate.
+  // Touch devices: OrbitControls hijacks pointer events and breaks the page
+  // scroll on iOS Safari (touch-action: pan-y is ignored when Three.js calls
+  // preventDefault on pointermove). Solution: don't mount OrbitControls at
+  // all on touch — `autoRotate` lives inside the controls, but the manual
+  // float in <Sphere> keeps the sphere visually alive.
   const isTouch = typeof window !== 'undefined'
     && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
 
@@ -96,26 +104,23 @@ export default function SphereHero() {
         <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
 
         <Suspense fallback={null}>
-          <Sphere />
+          <Sphere autoSpin={isTouch} />
           <Environment preset="night" />
         </Suspense>
 
-        <OrbitControls
-          autoRotate
-          autoRotateSpeed={0.8}
-          enableZoom={false}
-          enablePan={false}
-          enableRotate
-          enableDamping
-          dampingFactor={0.05}
-          rotateSpeed={1.0}
-          minPolarAngle={Math.PI * 0.30}
-          maxPolarAngle={Math.PI * 0.58}
-          touches={isTouch
-            ? { TWO: 2 /* THREE.TOUCH.DOLLY_ROTATE */ }
-            : { ONE: 1 /* THREE.TOUCH.ROTATE */ }
-          }
-        />
+        {!isTouch && (
+          <OrbitControls
+            autoRotate
+            autoRotateSpeed={0.8}
+            enableZoom={false}
+            enablePan={false}
+            enableDamping
+            dampingFactor={0.05}
+            rotateSpeed={1.0}
+            minPolarAngle={Math.PI * 0.30}
+            maxPolarAngle={Math.PI * 0.58}
+          />
+        )}
       </Canvas>
     </div>
   )
