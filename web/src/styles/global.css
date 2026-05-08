@@ -2285,9 +2285,9 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
 
   /* Hero */
   .hero-eyebrow-label { top: 11vh; left: 5vw; font-size: 0.62rem; letter-spacing: 0.28em; }
-  .hero-display { font-size: clamp(2.6rem, 18vw, 5.2rem); bottom: auto; top: 38%; padding-left: 5vw; line-height: 0.95; }
+  .hero-display { font-size: clamp(2.6rem, 18vw, 5.2rem); bottom: auto; top: 50%; padding-left: 5vw; line-height: 0.95; }
   .hero-divider { top: 56%; opacity: 0.35; }
-  .hero-desc { right: 5vw; left: 5vw; bottom: 6vh; text-align: left; font-size: 0.78rem; line-height: 1.55; letter-spacing: 0.04em; max-width: none; }
+  .hero-desc { right: 5vw; left: 5vw; bottom: 10vh; text-align: left; font-size: 0.78rem; line-height: 1.55; letter-spacing: 0.04em; max-width: none; }
   .hero-desc br { display: none; }
 
   /* Silence */
@@ -2403,8 +2403,8 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
 }
 
 @media (max-width: 480px) {
-  .hero-display { font-size: clamp(2.4rem, 16vw, 4rem); top: 40%; }
-  .hero-desc { font-size: 0.72rem; bottom: 5vh; }
+  .hero-display { font-size: clamp(2.4rem, 16vw, 4rem); top: 52%; }
+  .hero-desc { font-size: 0.72rem; bottom: 9vh; }
 
   .silence-headline { font-size: 1.6rem; line-height: 1.15; }
   .counter { font-size: 1.7rem; }

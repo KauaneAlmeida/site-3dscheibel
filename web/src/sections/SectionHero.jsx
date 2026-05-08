@@ -22,7 +22,7 @@ export default function SectionHero() {
       <SphereHero />
 
       {/* Top-left small label */}
-      <div className="hero-eyebrow-label">SCHEIBEL STUDIO</div>
+      <div className="hero-eyebrow-label">INSTITUTO SCHEIBEL</div>
 
       {/* Bottom-left huge display headline */}
       <h1 className="hero-display">SCHEIBEL</h1>
