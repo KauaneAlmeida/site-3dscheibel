@@ -2317,13 +2317,31 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
     max-width: none !important;
     padding-top: 0;
   }
+  /* Titles stay clean — no halo. Body / number labels get a heavy dark glow
+     so the small text reads cleanly over the busy DNA backdrop. */
   .science-pillar__title { font-size: clamp(1.3rem, 6.5vw, 2rem); max-width: 18ch; color: #fff; }
-  .science-pillar__body { font-size: 0.95rem; max-width: 36ch; color: rgba(255, 255, 255, 0.92); line-height: 1.55; }
-  .science-closing { top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem); max-width: 14ch; line-height: 1.1; color: #fff; }
+  .science-pillar__body {
+    font-size: 0.95rem; max-width: 36ch; color: #fff; line-height: 1.55;
+    text-shadow:
+      0 0 3px rgba(0, 0, 0, 1),
+      0 0 10px rgba(0, 0, 0, 0.95),
+      0 0 22px rgba(0, 0, 0, 0.85),
+      0 0 40px rgba(0, 0, 0, 0.6);
+  }
+  .science-closing {
+    top: 14vh; left: 5vw; right: 5vw; font-size: clamp(1.8rem, 9vw, 2.6rem);
+    max-width: 14ch; line-height: 1.1; color: #fff;
+  }
   .science-stats { right: 5vw; left: 5vw; bottom: 5vh; flex-direction: row; flex-wrap: wrap; gap: 1.4rem; max-width: none; text-align: left; justify-content: space-between; }
   .science-stat { flex: 1 1 30%; }
   .science-stat__num { font-size: clamp(2rem, 9vw, 2.8rem); margin-bottom: 0.4rem; color: #e8c179; }
-  .science-stat__label { font-size: 0.78rem; line-height: 1.4; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.88); }
+  .science-stat__label {
+    font-size: 0.78rem; line-height: 1.4; letter-spacing: 0.06em; color: #fff;
+    text-shadow:
+      0 0 3px rgba(0, 0, 0, 1),
+      0 0 10px rgba(0, 0, 0, 0.95),
+      0 0 22px rgba(0, 0, 0, 0.8);
+  }
   .science-scroll-hint { display: none; }
 
   /* App */
@@ -2374,7 +2392,7 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   }
 
   /* Partners */
-  .partners-quote { font-size: clamp(1.3rem, 6vw, 2rem); margin: 0 0 5vh; max-width: 24ch; }
+  .partners-quote { font-size: clamp(1.3rem, 6vw, 2rem); margin: 0 0 5vh; max-width: 24ch; line-height: 1.45; padding: 0 2vw; }
   .partners-quote br { display: none; }
   .partners-eyebrow { margin-bottom: 3vh; font-size: 0.62rem; }
   .partners-line { width: 80vw; }

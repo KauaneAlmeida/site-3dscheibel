@@ -33,8 +33,8 @@ export default function SectionHero() {
       {/* Bottom-right description */}
       <p className="hero-desc">
         SCHEIBEL DESBLOQUEIA O POTENCIAL HUMANO ATRAVÉS<br/>
-        DE PERCEPÇÕES BIOTECNOLÓGICAS ÉTICAS E A PRÓXIMA<br/>
-        EVOLUÇÃO DA SAÚDE DA CONSCIÊNCIA.
+        {' '}DE PERCEPÇÕES BIOTECNOLÓGICAS ÉTICAS E A PRÓXIMA<br/>
+        {' '}EVOLUÇÃO DA SAÚDE DA CONSCIÊNCIA.
       </p>
     </section>
   )
