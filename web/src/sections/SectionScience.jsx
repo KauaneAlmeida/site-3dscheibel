@@ -5,6 +5,9 @@ import DnaScene from '../components/DnaScene.jsx'
 import ScienceConstellations from '../components/ScienceConstellations.jsx'
 gsap.registerPlugin(ScrollTrigger)
 
+// TEMP DIAGNOSTIC: see SectionHero.jsx — same flag, same purpose.
+const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+
 /**
  * SectionScience — DNA reveal + manifesto.
  *
@@ -177,7 +180,7 @@ export default function SectionScience() {
       <div className="science-split-dark">
         <ScienceConstellations />
         <div className="dna-scene">
-          <DnaScene progressRef={sectionProgressRef} />
+          {IS_ANDROID ? <div data-android-stub /> : <DnaScene progressRef={sectionProgressRef} />}
         </div>
 
         <div className="science-pillars">
