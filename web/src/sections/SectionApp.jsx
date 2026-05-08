@@ -4,6 +4,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PhoneMock from '../components/PhoneMock.jsx'
 gsap.registerPlugin(ScrollTrigger)
 
+// TEMP DIAGNOSTIC: see SectionScience.jsx — same pin-scroll-jank hypothesis.
+const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+
 /**
  * Section 04 — "O Aplicativo" (revelação)
  * Pinned section: phone mockup centralized + tilts in 3D as you scroll.
@@ -13,6 +16,7 @@ export default function SectionApp() {
   const root = useRef()
 
   useEffect(() => {
+    if (IS_ANDROID) return
     const ctx = gsap.context(() => {
       // Pin the section while user scrolls through the reveal.
       // anticipatePin + invalidateOnRefresh prevent layout flicker on resize

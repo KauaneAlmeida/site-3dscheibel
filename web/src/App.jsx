@@ -18,6 +18,11 @@ import Marquee from './sections/Marquee.jsx'
 import { useScrollProgress } from './hooks/useScrollProgress.js'
 import { useLenis } from './hooks/useLenis.js'
 
+// TEMP DIAGNOSTIC: skip the JourneyOrb (Three.js Canvas + GSAP ticker every
+// frame) on Android. If scroll becomes fluid only after this, the orb is a
+// contributor and we'll need a lighter mobile variant.
+const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+
 export default function App() {
   const progressRef = useRef({ value: 0 })
   const { progress } = useScrollProgress()
@@ -40,7 +45,7 @@ export default function App() {
       <Loader />
       <TopBar />
       <Progress value={progress} />
-      <JourneyOrb />
+      {IS_ANDROID ? null : <JourneyOrb />}
 
       <main className="scroll-stack">
         <SectionHero />

@@ -31,6 +31,13 @@ export default function SectionScience() {
   const sectionProgressRef = useRef({ value: 0 })
 
   useEffect(() => {
+    // TEMP DIAGNOSTIC: Android scroll-jank. The 600% pin + scrub:1.5 makes
+    // scroll feel "frozen" on Android (user has to swipe through ~6 viewport
+    // heights to advance). Skip the pinned timeline entirely on Android so
+    // the section flows like normal content. If this fixes it, the real fix
+    // is to convert the timeline to on-enter reveals (no pin, no scrub) on
+    // mobile.
+    if (IS_ANDROID) return
     const ctx = gsap.context(() => {
       // Long pin so the user has plenty of scroll to read each pillar.
       // Mobile gets a slightly shorter pin but the higher scrub damping keeps
