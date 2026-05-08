@@ -90,27 +90,41 @@ function Sphere({ autoSpin = false, isometricTilt = false }) {
   )
 }
 
+// Detect low-end Android (Samsung A-series, Motorola, etc) vs iPhone / iPad
+// / desktop. iPhones have strong GPUs and should keep the full visual; only
+// mid-range Android needs the lighter rig.
+//   - iOS / iPadOS → never low-end (GPU is fine even on older models)
+//   - Android with deviceMemory <= 4GB OR hardwareConcurrency <= 4 → low-end
+//   - Everything else (desktop, high-end Android) → full quality
+function detectLowEnd() {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && navigator.maxTouchPoints > 1)
+  if (isIOS) return false
+  const isAndroid = /Android/.test(ua)
+  if (!isAndroid) return false
+  const mem = navigator.deviceMemory ?? 8        // unknown ⇒ assume strong
+  const cores = navigator.hardwareConcurrency ?? 8
+  return mem <= 4 || cores <= 4
+}
+
 export default function SphereHero() {
-  // ALL touch devices: locked isometric tilt + auto-spin, no OrbitControls.
-  // After multiple iterations on iOS Safari + Lenis + Three.js conflicts,
-  // mounting OrbitControls on touch always traps page scroll one way or
-  // another. The cleanest working contract is: phones never own pointer
-  // events, the sphere just lives there spinning. Desktop keeps full
-  // OrbitControls (mouse drag, autorotate, polar clamp).
+  // OrbitControls disable applies to any touch device (iOS Safari + Lenis
+  // conflicts). Lighting/DPR cuts apply ONLY to low-end Android so iPhone
+  // and high-end Android keep the full reflective sphere.
   const isTouch = typeof window !== 'undefined'
     && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
+  const isLowEnd = typeof window !== 'undefined' && detectLowEnd()
 
   return (
     <div className="sphere-hero">
       <Canvas
         className="sphere-hero__canvas"
-        // On mobile cap DPR to 1 (instead of up to 1.8) and disable MSAA.
-        // Samsung A-series / Motorola mid-range have devicePixelRatio: 3,
-        // so [1, 1.8] was rendering ~3x more pixels than the GPU can paint
-        // smoothly — caused the hero to freeze hard on Samsung A14.
-        dpr={isTouch ? 1 : [1, 1.8]}
+        // Cap DPR / disable MSAA only on low-end Android. iPhone keeps
+        // [1, 1.8] + antialias for the polished look it can afford.
+        dpr={isLowEnd ? 1 : [1, 1.8]}
         gl={{
-          antialias: !isTouch,
+          antialias: !isLowEnd,
           alpha: true,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
@@ -118,25 +132,25 @@ export default function SphereHero() {
         }}
         camera={{ position: [0, 0, 3.1], fov: 40, near: 0.05, far: 50 }}
       >
-        {/* Mobile gets brighter ambient + one extra warm key to compensate for
-            the dropped Environment HDR. Desktop keeps the full lighting rig. */}
-        <ambientLight intensity={isTouch ? 1.2 : 0.8} color="#fff5e0" />
-        <directionalLight position={[3, 4, 3]} intensity={isTouch ? 2.6 : 2.0} color="#fff8ec" />
-        {!isTouch && (
+        {/* Low-end Android: brighter ambient + warm key to fake the IBL.
+            Everywhere else: original lighting rig. */}
+        <ambientLight intensity={isLowEnd ? 1.2 : 0.8} color="#fff5e0" />
+        <directionalLight position={[3, 4, 3]} intensity={isLowEnd ? 2.6 : 2.0} color="#fff8ec" />
+        {!isLowEnd && (
           <>
             <pointLight position={[-3, 1.5, 1.5]} intensity={3} distance={9} color="#d8b896" />
             <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
           </>
         )}
-        {isTouch && (
+        {isLowEnd && (
           <pointLight position={[2, 2, 3]} intensity={1.5} distance={8} color="#d8b896" />
         )}
 
         <Suspense fallback={null}>
           <Sphere autoSpin={isTouch} isometricTilt={isTouch} />
-          {/* Environment HDR is expensive on mobile (cubemap bake + IBL).
-              Desktop keeps it for the full reflective look. */}
-          {!isTouch && <Environment preset="night" />}
+          {/* HDR Environment kept on iPhone + desktop (good GPUs handle it).
+              Only the low-end Android branch drops it. */}
+          {!isLowEnd && <Environment preset="night" />}
         </Suspense>
 
         {!isTouch && (
