@@ -90,59 +90,20 @@ function Sphere({ autoSpin = false, isometricTilt = false }) {
   )
 }
 
-// Detect low-end Android (Samsung A-series, Motorola, etc) vs iPhone / iPad
-// / desktop. iPhones have strong GPUs and should keep the full visual; only
-// mid-range Android needs the lighter rig.
-//   - iOS / iPadOS → never low-end (GPU is fine even on older models)
-//   - Android with deviceMemory <= 4GB OR hardwareConcurrency <= 4 → low-end
-//   - Everything else (desktop, high-end Android) → full quality
-function detectLowEnd() {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent || ''
-  const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && navigator.maxTouchPoints > 1)
-  if (isIOS) return false
-  const isAndroid = /Android/.test(ua)
-  if (!isAndroid) return false
-  const mem = navigator.deviceMemory ?? 8        // unknown ⇒ assume strong
-  const cores = navigator.hardwareConcurrency ?? 8
-  return mem <= 4 || cores <= 4
-}
-
 export default function SphereHero() {
+  // Touch devices skip OrbitControls (iOS Safari + Lenis conflict).
+  // Lighting and DPR stay at full quality for every device — iPhone is
+  // the priority and Android can take the hit if it's slower.
   const isTouch = typeof window !== 'undefined'
     && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
-  const isLowEnd = typeof window !== 'undefined' && detectLowEnd()
-
-  // Low-end Android: ditch WebGL entirely and serve a pre-rendered MP4 loop
-  // of the sphere. Hardware-decoded video runs smoothly on Mali-G52 / Adreno
-  // 610, costs almost no battery, and the visual is identical to the 3D
-  // render at hero size. iPhone and desktop keep the full Three.js canvas.
-  if (isLowEnd) {
-    return (
-      <div className="sphere-hero sphere-hero--video">
-        <video
-          className="sphere-hero__video"
-          src="/sphere-loop.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          aria-hidden="true"
-          poster="/hero.png"
-        />
-      </div>
-    )
-  }
 
   return (
     <div className="sphere-hero">
       <Canvas
         className="sphere-hero__canvas"
-        // Cap DPR / disable MSAA only on low-end Android. iPhone keeps
-        // [1, 1.8] + antialias for the polished look it can afford.
-        dpr={isLowEnd ? 1 : [1, 1.8]}
+        dpr={[1, 1.8]}
         gl={{
-          antialias: !isLowEnd,
+          antialias: true,
           alpha: true,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
@@ -150,25 +111,14 @@ export default function SphereHero() {
         }}
         camera={{ position: [0, 0, 3.1], fov: 40, near: 0.05, far: 50 }}
       >
-        {/* Low-end Android: brighter ambient + warm key to fake the IBL.
-            Everywhere else: original lighting rig. */}
-        <ambientLight intensity={isLowEnd ? 1.2 : 0.8} color="#fff5e0" />
-        <directionalLight position={[3, 4, 3]} intensity={isLowEnd ? 2.6 : 2.0} color="#fff8ec" />
-        {!isLowEnd && (
-          <>
-            <pointLight position={[-3, 1.5, 1.5]} intensity={3} distance={9} color="#d8b896" />
-            <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
-          </>
-        )}
-        {isLowEnd && (
-          <pointLight position={[2, 2, 3]} intensity={1.5} distance={8} color="#d8b896" />
-        )}
+        <ambientLight intensity={0.8} color="#fff5e0" />
+        <directionalLight position={[3, 4, 3]} intensity={2.0} color="#fff8ec" />
+        <pointLight position={[-3, 1.5, 1.5]} intensity={3} distance={9} color="#d8b896" />
+        <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
 
         <Suspense fallback={null}>
           <Sphere autoSpin={isTouch} isometricTilt={isTouch} />
-          {/* HDR Environment kept on iPhone + desktop (good GPUs handle it).
-              Only the low-end Android branch drops it. */}
-          {!isLowEnd && <Environment preset="night" />}
+          <Environment preset="night" />
         </Suspense>
 
         {!isTouch && (

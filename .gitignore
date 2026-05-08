@@ -8,13 +8,10 @@ render_previews/*.png
 *.blend1
 *.blend@
 
-# Blender source files (root) — only the optimised .glb in web/public/ ships
-/dnagolden.glb
-/esfera.glb
-/esfera.original.bak.glb
-
-# Original/backup glb assets — shipped versions live alongside without .original
-**/*.original.bak.glb
+# Backup/source GLBs — only the optimised version in web/public/ should ship
+**/*.bak.glb
+**/*.original.glb
+**/*.heavy.glb
 
 # Vercel
 .vercel
