@@ -5,7 +5,7 @@ import DnaScene from '../components/DnaScene.jsx'
 import ScienceConstellations from '../components/ScienceConstellations.jsx'
 gsap.registerPlugin(ScrollTrigger)
 
-// TEMP DIAGNOSTIC: see SectionHero.jsx — same flag, same purpose.
+// Android skips the pin/scrub timeline below — see useEffect for rationale.
 const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 
 /**
@@ -187,7 +187,7 @@ export default function SectionScience() {
       <div className="science-split-dark">
         <ScienceConstellations />
         <div className="dna-scene">
-          {IS_ANDROID ? <div data-android-stub /> : <DnaScene progressRef={sectionProgressRef} />}
+          <DnaScene progressRef={sectionProgressRef} />
         </div>
 
         <div className="science-pillars">

@@ -14,17 +14,11 @@ import { useProgress } from '@react-three/drei'
  * Hide is gated on the REAL drei progress reaching 100 + active flipping
  * to false, so we never hide on the ghost.
  */
-// If no <Canvas> is mounted on this device (e.g. Android with WebGL stubs),
-// drei's useProgress() stays at 0 forever and the loader sits on top of the
-// page until the 30s safety net fires — blocking every touch in that window.
-// Detect "no R3F work to wait for" and short-circuit the loader.
-const HAS_NO_CANVAS = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
-
 export default function Loader() {
   const { progress: realProgress, active } = useProgress()
-  const [hide, setHide] = useState(HAS_NO_CANVAS)
-  const [displayed, setDisplayed] = useState(HAS_NO_CANVAS ? 100 : 0)
-  const reachedFull = useRef(HAS_NO_CANVAS)
+  const [hide, setHide] = useState(false)
+  const [displayed, setDisplayed] = useState(0)
+  const reachedFull = useRef(false)
   const startedAt = useRef(performance.now())
   const realRef = useRef(0)
 

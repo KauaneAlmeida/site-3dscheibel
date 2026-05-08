@@ -4,11 +4,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import SphereHero from '../components/SphereHero.jsx'
 gsap.registerPlugin(ScrollTrigger)
 
-// TEMP DIAGNOSTIC: skip the WebGL hero on Android to isolate whether the
-// scroll-jank source is the Three.js scenes or something else. Remove once
-// the bottleneck is confirmed.
-const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
-
 export default function SectionHero() {
   const root = useRef()
 
@@ -24,7 +19,7 @@ export default function SectionHero() {
 
   return (
     <section ref={root} className="section hero" data-section="hero">
-      {IS_ANDROID ? null : <SphereHero />}
+      <SphereHero />
 
       {/* Top-left small label */}
       <div className="hero-eyebrow-label">INSTITUTO SCHEIBEL</div>
