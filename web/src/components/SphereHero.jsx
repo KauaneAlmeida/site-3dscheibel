@@ -104,23 +104,39 @@ export default function SphereHero() {
     <div className="sphere-hero">
       <Canvas
         className="sphere-hero__canvas"
-        dpr={[1, 1.8]}
+        // On mobile cap DPR to 1 (instead of up to 1.8) and disable MSAA.
+        // Samsung A-series / Motorola mid-range have devicePixelRatio: 3,
+        // so [1, 1.8] was rendering ~3x more pixels than the GPU can paint
+        // smoothly — caused the hero to freeze hard on Samsung A14.
+        dpr={isTouch ? 1 : [1, 1.8]}
         gl={{
-          antialias: true,
+          antialias: !isTouch,
           alpha: true,
+          powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.2,
         }}
         camera={{ position: [0, 0, 3.1], fov: 40, near: 0.05, far: 50 }}
       >
-        <ambientLight intensity={0.8} color="#fff5e0" />
-        <directionalLight position={[3, 4, 3]} intensity={2.0} color="#fff8ec" />
-        <pointLight position={[-3, 1.5, 1.5]} intensity={3} distance={9} color="#d8b896" />
-        <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
+        {/* Mobile gets brighter ambient + one extra warm key to compensate for
+            the dropped Environment HDR. Desktop keeps the full lighting rig. */}
+        <ambientLight intensity={isTouch ? 1.2 : 0.8} color="#fff5e0" />
+        <directionalLight position={[3, 4, 3]} intensity={isTouch ? 2.6 : 2.0} color="#fff8ec" />
+        {!isTouch && (
+          <>
+            <pointLight position={[-3, 1.5, 1.5]} intensity={3} distance={9} color="#d8b896" />
+            <pointLight position={[2.5, -1, -1]} intensity={1.5} distance={7} color="#fff5e0" />
+          </>
+        )}
+        {isTouch && (
+          <pointLight position={[2, 2, 3]} intensity={1.5} distance={8} color="#d8b896" />
+        )}
 
         <Suspense fallback={null}>
           <Sphere autoSpin={isTouch} isometricTilt={isTouch} />
-          <Environment preset="night" />
+          {/* Environment HDR is expensive on mobile (cubemap bake + IBL).
+              Desktop keeps it for the full reflective look. */}
+          {!isTouch && <Environment preset="night" />}
         </Suspense>
 
         {!isTouch && (
