@@ -23,7 +23,7 @@ export default function SectionPartners() {
   return (
     <section ref={root} className="section section-partners" data-section="partners">
       <p className="partners-quote">
-        “Cada decisão foi tomada<br/>com pacientes reais ao nosso lado.”
+        “Cada decisão foi tomada<br/>{' '}com pacientes reais ao nosso lado.”
       </p>
       <div className="partners-line" />
     </section>
