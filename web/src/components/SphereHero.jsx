@@ -109,12 +109,30 @@ function detectLowEnd() {
 }
 
 export default function SphereHero() {
-  // OrbitControls disable applies to any touch device (iOS Safari + Lenis
-  // conflicts). Lighting/DPR cuts apply ONLY to low-end Android so iPhone
-  // and high-end Android keep the full reflective sphere.
   const isTouch = typeof window !== 'undefined'
     && (matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches)
   const isLowEnd = typeof window !== 'undefined' && detectLowEnd()
+
+  // Low-end Android: ditch WebGL entirely and serve a pre-rendered MP4 loop
+  // of the sphere. Hardware-decoded video runs smoothly on Mali-G52 / Adreno
+  // 610, costs almost no battery, and the visual is identical to the 3D
+  // render at hero size. iPhone and desktop keep the full Three.js canvas.
+  if (isLowEnd) {
+    return (
+      <div className="sphere-hero sphere-hero--video">
+        <video
+          className="sphere-hero__video"
+          src="/sphere-loop.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+          poster="/hero.png"
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="sphere-hero">

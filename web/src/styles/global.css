@@ -234,6 +234,24 @@ a, button {
    With Lenis disabled on touch, OrbitControls and the iOS native scroll
    engine share the gesture stream — short drags rotate the sphere, larger
    vertical swipes scroll the page. */
+/* Low-end Android variant: the sphere is a pre-rendered MP4 instead of WebGL.
+   Same footprint, no GPU cost, scrolls cleanly on Mali-G52 class GPUs. */
+.sphere-hero--video {
+  pointer-events: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-void);
+}
+.sphere-hero__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  /* Slightly desaturate so it reads consistently with the cream backdrop. */
+  filter: saturate(1.05);
+}
 .sphere-hero {
   position: absolute;
   inset: 0;
