@@ -24,7 +24,7 @@ export default function SectionHero() {
 
   return (
     <section ref={root} className="section hero" data-section="hero">
-      {IS_ANDROID ? <div className="sphere-hero" data-android-stub /> : <SphereHero />}
+      {IS_ANDROID ? null : <SphereHero />}
 
       {/* Top-left small label */}
       <div className="hero-eyebrow-label">INSTITUTO SCHEIBEL</div>
