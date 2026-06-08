@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import SphereHero from '../components/SphereHero.jsx'
+import VideoLayer from '../components/VideoLayer.jsx'
+import { IS_ANDROID } from '../lib/isAndroid.js'
 gsap.registerPlugin(ScrollTrigger)
 
 export default function SectionHero() {
@@ -19,7 +21,18 @@ export default function SectionHero() {
 
   return (
     <section ref={root} className="section hero" data-section="hero">
-      <SphereHero />
+      {IS_ANDROID ? (
+        <div className="hero-video-wrap">
+          <VideoLayer
+            src="/video/hero-saturn.mp4"
+            poster="/video/hero-saturn.jpg"
+            mode="loop"
+            className="hero-video"
+          />
+        </div>
+      ) : (
+        <SphereHero />
+      )}
 
       {/* Top-left small label */}
       <div className="hero-eyebrow-label">INSTITUTO SCHEIBEL</div>

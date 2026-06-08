@@ -799,6 +799,12 @@ a, button {
   height: 100%;
   display: block;
 }
+.science-constellations__dot {
+  position: absolute;
+  /* Center the dot exactly on its (x%, y%) coordinate. */
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
 .dna-scene {
   position: absolute;
   inset: 0;
@@ -965,9 +971,13 @@ a, button {
 .screens-wedge {
   position: absolute;
   inset: 0;
-  /* Solid color that exactly matches the top of the next section so the seam
-     is invisible when the wedge meets the section below. */
-  background: #d4c5a8;
+  /* Doctor photo — the rising wedge reveals the same full-bleed image used by
+     the partners section below, so the seam between them is invisible. */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('/doctor-image.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
   pointer-events: none;
   z-index: 5;
@@ -1018,9 +1028,14 @@ a, button {
 .section-partners {
   align-items: center;
   text-align: center;
-  /* Solid beige to match the closing wedge from the previous section */
-  background: #d4c5a8;
-  color: #3a2818;
+  /* Full-bleed doctor photo background — fixed attachment so it lines up
+     seamlessly with the rising wedge from the section above. */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('/doctor-image.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #f5f0e6;
   padding: 18vh 6vw;
 }
 .partners-eyebrow {
@@ -1037,15 +1052,16 @@ a, button {
   font-weight: 300;
   font-size: clamp(1.8rem, 3.6vw, 3.6rem);
   line-height: 1.2;
-  color: var(--text-primary);
+  color: #f5f0e6;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
   margin: 0 0 8vh;
   max-width: 28ch;
 }
 .partners-line {
   width: min(70vw, 900px);
   height: 1px;
-  background: var(--text-primary);
-  opacity: 0.4;
+  background: #f5f0e6;
+  opacity: 0.5;
   margin-bottom: 4vh;
 }
 .partners-row {
@@ -2454,4 +2470,36 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .ph-screen { padding: 42px 16px 16px; gap: 10px; }
   .ph-card__big { font-size: 1.4rem; }
   .ph-stat__num { font-size: 0.92rem; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Android video fallbacks — full-bleed <video> standing in for the WebGL
+   scenes (Saturn hero + DNA section). Must read as the live scene, not a
+   "video": no controls, fills the frame, sits behind the text/orb overlays.
+   ────────────────────────────────────────────────────────────────────────── */
+.video-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+}
+/* Hero Saturn video — sits in the same layer the sphere canvas used (z 4),
+   below the JourneyOrb and the hero text/divider. */
+.hero-video-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg-void);
+}
+/* DNA video fills the .dna-scene wrapper, which already handles z-index and
+   the scroll-driven opacity reveal. */
+.dna-video {
+  position: absolute;
+  inset: 0;
 }

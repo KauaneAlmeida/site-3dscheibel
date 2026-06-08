@@ -2,10 +2,8 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PhoneMock from '../components/PhoneMock.jsx'
+import { IS_ANDROID } from '../lib/isAndroid.js'
 gsap.registerPlugin(ScrollTrigger)
-
-// TEMP DIAGNOSTIC: see SectionScience.jsx — same pin-scroll-jank hypothesis.
-const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 
 /**
  * Section 04 — "O Aplicativo" (revelação)
@@ -16,30 +14,35 @@ export default function SectionApp() {
   const root = useRef()
 
   useEffect(() => {
-    if (IS_ANDROID) return
     const ctx = gsap.context(() => {
-      // Pin the section while user scrolls through the reveal.
-      // anticipatePin + invalidateOnRefresh prevent layout flicker on resize
-      // and on Lenis smooth-scroll edge cases.
+      // Android skips ONLY the pin (the long pin was the scroll-jank culprit),
+      // but still runs the reveal/float animations so the phone enters with the
+      // same motion as everywhere else instead of popping in static.
       const isMobile = window.innerWidth <= 768
-      ScrollTrigger.create({
-        trigger: root.current,
-        start: 'top top',
-        end: isMobile ? '+=120%' : '+=100%',
-        pin: true,
-        pinSpacing: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-      })
+      if (!IS_ANDROID) {
+        // Pin the section while user scrolls through the reveal.
+        // anticipatePin + invalidateOnRefresh prevent layout flicker on resize
+        // and on Lenis smooth-scroll edge cases.
+        ScrollTrigger.create({
+          trigger: root.current,
+          start: 'top top',
+          end: isMobile ? '+=120%' : '+=100%',
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+        })
+      }
 
-      // Phone enters from below, tilts during scroll
+      // Phone enters from below, tilts during scroll. On Android (no pin) the
+      // trigger window is anchored to the section scrolling past the viewport.
       gsap.fromTo('.app-phone', {
         y: 200, opacity: 0, rotateX: 25, scale: 0.85,
       }, {
         scrollTrigger: {
           trigger: root.current,
-          start: 'top top',
-          end: '+=80%',
+          start: IS_ANDROID ? 'top 85%' : 'top top',
+          end: IS_ANDROID ? 'top 25%' : '+=80%',
           scrub: 0.6,
           invalidateOnRefresh: true,
         },
@@ -59,13 +62,13 @@ export default function SectionApp() {
       )
 
       // Fade the surrounding texts AS the phone rises — synced to the same
-      // pinned scroll range as the phone reveal. The texts are gone by the
-      // time the phone reaches centre, so the device has the spotlight alone.
+      // scroll range as the phone reveal. The texts are gone by the time the
+      // phone reaches centre, so the device has the spotlight alone.
       gsap.to('.app-title-top, .app-title-bottom', {
         scrollTrigger: {
           trigger: root.current,
-          start: 'top top',
-          end: 'top -30%',
+          start: IS_ANDROID ? 'top 55%' : 'top top',
+          end: IS_ANDROID ? 'top 15%' : 'top -30%',
           scrub: 0.6,
           invalidateOnRefresh: true,
         },

@@ -3,10 +3,15 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { IS_ANDROID } from '../lib/isAndroid.js'
 
-useGLTF.preload('/dna.glb', undefined, undefined, (loader) => {
-  loader.setMeshoptDecoder(MeshoptDecoder)
-})
+// Android serves a video instead of this WebGL DNA, so never preload the GLB
+// there — keeps the page light, which is the whole point of the fallback.
+if (!IS_ANDROID) {
+  useGLTF.preload('/dna.glb', undefined, undefined, (loader) => {
+    loader.setMeshoptDecoder(MeshoptDecoder)
+  })
+}
 
 function Dna({ progressRef }) {
   const outerRef = useRef()  // position + tilt (constant)

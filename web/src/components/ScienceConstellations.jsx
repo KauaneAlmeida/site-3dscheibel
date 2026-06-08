@@ -81,8 +81,8 @@ const COLOR = {
 export default function ScienceConstellations() {
   return (
     <div className="science-constellations" aria-hidden>
+      {/* Lines stay in a stretched SVG so they connect the node positions. */}
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="science-constellations__svg">
-        {/* Lines first so dots render on top */}
         {EDGES.map(([a, b], i) => {
           const A = NODES[a], B = NODES[b]
           return (
@@ -97,16 +97,27 @@ export default function ScienceConstellations() {
             />
           )
         })}
-        {NODES.map((n, i) => (
-          <circle
-            key={`n-${i}`}
-            cx={n.x} cy={n.y}
-            r={n.c === 'd' ? 0.3 : 0.55}
-            fill={COLOR[n.c]}
-            opacity={n.c === 'd' ? 0.55 : 0.85}
-          />
-        ))}
       </svg>
+      {/* Dots as absolutely-positioned divs so they stay perfectly round
+          regardless of the container's aspect ratio. Their centers land on the
+          same percent coordinates as the SVG line endpoints. */}
+      {NODES.map((n, i) => {
+        const size = n.c === 'd' ? 4 : 7
+        return (
+          <span
+            key={`n-${i}`}
+            className="science-constellations__dot"
+            style={{
+              left: `${n.x}%`,
+              top: `${n.y}%`,
+              width: `${size}px`,
+              height: `${size}px`,
+              background: COLOR[n.c],
+              opacity: n.c === 'd' ? 0.55 : 0.85,
+            }}
+          />
+        )
+      })}
     </div>
   )
 }

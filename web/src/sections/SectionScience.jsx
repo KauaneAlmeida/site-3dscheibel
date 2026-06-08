@@ -2,11 +2,16 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import DnaScene from '../components/DnaScene.jsx'
+import VideoLayer from '../components/VideoLayer.jsx'
 import ScienceConstellations from '../components/ScienceConstellations.jsx'
+import { IS_ANDROID } from '../lib/isAndroid.js'
 gsap.registerPlugin(ScrollTrigger)
 
-// Android skips the pin/scrub timeline below — see useEffect for rationale.
-const IS_ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+// Background colour keyframes (brown -> navy -> green), same as the desktop
+// timeline below, expressed as a helper for the Android scrub timeline.
+const BG_BROWN = { '--c-base': '#1a120a', '--c-base-deep': '#0a0703', '--c-glow': 'rgba(180, 100, 40, 0.4)' }
+const BG_NAVY  = { '--c-base': '#0f1a2e', '--c-base-deep': '#040814', '--c-glow': 'rgba(60, 110, 200, 0.35)' }
+const BG_GREEN = { '--c-base': '#0d1f17', '--c-base-deep': '#03100a', '--c-glow': 'rgba(50, 160, 100, 0.32)' }
 
 /**
  * SectionScience — DNA reveal + manifesto.
@@ -31,13 +36,87 @@ export default function SectionScience() {
   const sectionProgressRef = useRef({ value: 0 })
 
   useEffect(() => {
-    // TEMP DIAGNOSTIC: Android scroll-jank. The 600% pin + scrub:1.5 makes
-    // scroll feel "frozen" on Android (user has to swipe through ~6 viewport
-    // heights to advance). Skip the pinned timeline entirely on Android so
-    // the section flows like normal content. If this fixes it, the real fix
-    // is to convert the timeline to on-enter reveals (no pin, no scrub) on
-    // mobile.
-    if (IS_ANDROID) return
+    // ── Android: video-backed scrub timeline ────────────────────────────────
+    // The WebGL DNA is replaced by a scroll-scrubbed <video>. We pin the
+    // section and write scroll progress (0..1) into sectionProgressRef, which
+    // VideoLayer reads to drive the video's currentTime. The background colour
+    // shift and the pillar reveals ride the same scrubbed progress, so the
+    // result feels identical to the live section — just lighter.
+    if (IS_ANDROID) {
+      const ctx = gsap.context(() => {
+        // Start on the cream "Não é um app. É uma presença." intro, with the
+        // dark/DNA side hidden below (same wedge entry as desktop).
+        gsap.set('.science-light', { opacity: 1 })
+        gsap.set('.science-split-dark', {
+          clipPath: 'polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)',
+          ...BG_BROWN,
+        })
+        gsap.set('.dna-scene', { opacity: 0 })
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: root.current,
+            start: 'top top',
+            // Shorter pin than desktop so Android doesn't feel "frozen".
+            end: '+=450%',
+            pin: true,
+            pinSpacing: true,
+            scrub: 1,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              // Remap progress so the DNA video only scrubs AFTER the intro
+              // wedge finishes (intro occupies 0..0.12 of the timeline).
+              const INTRO = 0.12
+              const raw = self.progress
+              sectionProgressRef.current.value = raw <= INTRO ? 0 : (raw - INTRO) / (1 - INTRO)
+            },
+          },
+        })
+
+        // Stage A — cream intro fades, dark wedge rises diagonally then covers
+        // the whole screen, DNA video fades in. Mirrors the desktop entry.
+        tl.to('.science-light', { opacity: 0, duration: 0.10, ease: 'sine.inOut' }, 0.04)
+          .fromTo('.science-split-dark',
+            { clipPath: 'polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)' },
+            { clipPath: 'polygon(0% 60%, 100% 30%, 100% 100%, 0% 100%)', duration: 0.06, ease: 'sine.inOut' },
+            0.04)
+          .to('.science-split-dark',
+            { clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', duration: 0.06, ease: 'sine.inOut' },
+            0.10)
+          .to('.dna-scene', { opacity: 1, duration: 0.08, ease: 'sine.inOut' }, 0.08)
+
+        // Background colour shift: brown -> navy -> green.
+        tl.to('.science-split-dark', { ...BG_NAVY, duration: 0.30, ease: 'sine.inOut' }, 0.30)
+          .to('.science-split-dark', { ...BG_GREEN, duration: 0.30, ease: 'sine.inOut' }, 0.62)
+
+        // Pillars — sequential reveal, after the intro wedge completes.
+        const pillarSlots = [
+          { start: 0.18, name: '.science-pillar--1' },
+          { start: 0.44, name: '.science-pillar--2' },
+          { start: 0.70, name: '.science-pillar--3' },
+        ]
+        pillarSlots.forEach(({ start, name }) => {
+          tl.fromTo(name, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none' }, start)
+          tl.fromTo(`${name} .science-pillar__line`, { scaleX: 0 }, { scaleX: 1, duration: 0.14, ease: 'power2.out' }, start)
+          tl.fromTo(`${name} .science-pillar__title`,
+            { clipPath: 'inset(100% 0% 0% 0%)', y: 16 },
+            { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.18, ease: 'power3.out' }, start + 0.02)
+          tl.fromTo(`${name} .science-pillar__body`,
+            { clipPath: 'inset(100% 0% 0% 0%)', y: 12 },
+            { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 0.18, ease: 'power3.out' }, start + 0.06)
+          tl.to(name, { opacity: 0, duration: 0.06, ease: 'power2.in' }, start + 0.24)
+          tl.set(`${name} .science-pillar__title`, { clipPath: 'inset(100% 0% 0% 0%)' }, start + 0.30)
+          tl.set(`${name} .science-pillar__body`, { clipPath: 'inset(100% 0% 0% 0%)' }, start + 0.30)
+        })
+
+        // Closing headline + stats.
+        tl.fromTo('.science-closing', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.10, ease: 'sine.inOut' }, 0.96)
+        tl.fromTo('.science-stat', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.10, stagger: 0.03, ease: 'sine.inOut' }, 1.00)
+      }, root)
+      return () => ctx.revert()
+    }
+
     const ctx = gsap.context(() => {
       // Long pin so the user has plenty of scroll to read each pillar.
       // Mobile gets a slightly shorter pin but the higher scrub damping keeps
@@ -187,7 +266,17 @@ export default function SectionScience() {
       <div className="science-split-dark">
         <ScienceConstellations />
         <div className="dna-scene">
-          <DnaScene progressRef={sectionProgressRef} />
+          {IS_ANDROID ? (
+            <VideoLayer
+              src="/video/dna-section.mp4"
+              poster="/video/dna-section.jpg"
+              mode="scrub"
+              progressRef={sectionProgressRef}
+              className="dna-video"
+            />
+          ) : (
+            <DnaScene progressRef={sectionProgressRef} />
+          )}
         </div>
 
         <div className="science-pillars">

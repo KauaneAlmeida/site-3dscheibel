@@ -10,6 +10,16 @@ const NAV = [
 export default function TopBar() {
   const [open, setOpen] = useState(false)
 
+  // Closing the menu while a button inside it still holds focus triggers the
+  // "aria-hidden on a focused element's ancestor" block, which can wedge focus
+  // and freeze interaction. Always drop focus to <body> as we close so the
+  // subtree being hidden/inert no longer contains the active element.
+  const close = () => {
+    const el = document.activeElement
+    if (el && typeof el.blur === 'function') el.blur()
+    setOpen(false)
+  }
+
   // Lock body scroll while the menu is open so background doesn't drift.
   useEffect(() => {
     if (!open) return
@@ -21,7 +31,7 @@ export default function TopBar() {
   // Close on Escape — small UX fix that's expected on overlays.
   useEffect(() => {
     if (!open) return
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') close() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
@@ -29,7 +39,7 @@ export default function TopBar() {
   const goTo = (selector) => {
     const el = document.querySelector(selector)
     if (!el) return
-    setOpen(false)
+    close()
     // Sections inside pinned containers (Science, App) sit inside .pin-spacer
     // wrappers added by ScrollTrigger. Use the wrapper if present so we land
     // at the right scroll position respecting the pin height.
@@ -60,11 +70,17 @@ export default function TopBar() {
         </div>
       </header>
 
-      <nav className={`nav-overlay ${open ? 'is-open' : ''}`} aria-hidden={!open}>
+      {/* `inert` (set only when closed) removes the whole subtree from focus
+          and assistive tech without the aria-hidden-on-focused-element block
+          that was wedging interaction. */}
+      <nav
+        className={`nav-overlay ${open ? 'is-open' : ''}`}
+        {...(open ? {} : { inert: '', 'aria-hidden': 'true' })}
+      >
         <button
           className="nav-overlay__close"
           aria-label="Fechar menu"
-          onClick={() => setOpen(false)}
+          onClick={close}
         >
           <span aria-hidden="true">✕</span>
         </button>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useProgress } from '@react-three/drei'
+import { IS_ANDROID } from '../lib/isAndroid.js'
 
 /**
  * Loader — stays on screen until R3F finishes loading every asset (GLB
@@ -51,16 +52,31 @@ export default function Loader() {
     return () => cancelAnimationFrame(raf)
   }, [])
 
-  // Hide once everything has loaded AND drei is idle, after a short settle.
+  // Android loads NO Three.js assets (GLBs/HDR are swapped for video), so
+  // useProgress never reaches 100 and `active` may stay false forever. Gating
+  // the hide on drei progress would leave the loader up until the 30s safety
+  // net — which is exactly the "page frozen at start, can't scroll" bug. So on
+  // Android we just hide after a short fixed settle once mounted.
   useEffect(() => {
+    if (!IS_ANDROID) return
+    setDisplayed(100)
+    const t = setTimeout(() => setHide(true), 700)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Desktop/iOS — hide once everything has loaded AND drei is idle, after a
+  // short settle.
+  useEffect(() => {
+    if (IS_ANDROID) return
     if (!reachedFull.current) return
     if (active) return
     const t = setTimeout(() => setHide(true), 600)
     return () => clearTimeout(t)
   }, [active, realProgress])
 
-  // Safety net — 30s max.
+  // Safety net — 30s max (desktop/iOS only; Android hides on its own timer).
   useEffect(() => {
+    if (IS_ANDROID) return
     const t = setTimeout(() => setHide(true), 30000)
     return () => clearTimeout(t)
   }, [])

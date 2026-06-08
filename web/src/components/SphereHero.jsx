@@ -8,10 +8,15 @@ import { useGLTF, Environment, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { IS_ANDROID } from '../lib/isAndroid.js'
 
-useGLTF.preload('/sphere.glb', undefined, undefined, (loader) => {
-  loader.setMeshoptDecoder(MeshoptDecoder)
-})
+// Android serves a video instead of this WebGL sphere, so never preload the
+// GLB there — that's the whole point of the fallback (keep the page light).
+if (!IS_ANDROID) {
+  useGLTF.preload('/sphere.glb', undefined, undefined, (loader) => {
+    loader.setMeshoptDecoder(MeshoptDecoder)
+  })
+}
 
 function Sphere({ autoSpin = false, isometricTilt = false }) {
   const groupRef = useRef()
