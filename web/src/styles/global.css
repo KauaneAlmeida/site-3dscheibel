@@ -2503,3 +2503,25 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   position: absolute;
   inset: 0;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Touch/Android scroll-performance overrides.
+
+   `background-attachment: fixed` forces Chrome/Android to repaint the whole
+   background image on every scroll frame on the main thread, AND it disables
+   composited scrolling for the entire page — so the hero janks even though the
+   fixed background is on a section further down. Switch it to `scroll` on
+   touch; the seam-matching it bought is a desktop-only nicety.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (hover: none), (pointer: coarse) {
+  .section-partners,
+  .screens-wedge {
+    background-attachment: scroll !important;
+  }
+  /* 20 blurred fragments animating forever cost composite work in the
+     481–768px band where many Androids land. Hide them on touch. */
+  .app-fragments,
+  .app-fragments-right {
+    display: none !important;
+  }
+}

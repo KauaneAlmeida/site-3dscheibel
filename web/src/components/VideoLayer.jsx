@@ -92,7 +92,11 @@ export default function VideoLayer({
       poster={poster}
       muted
       playsInline
-      preload="auto"
+      // Loop (hero): the poster covers the first paint, so only fetch metadata
+      // up front and let playback stream — avoids downloading + decoding the
+      // whole clip during the first scroll. Scrub (DNA) needs frames buffered
+      // for smooth seeking, so it keeps preload="auto".
+      preload={mode === 'scrub' ? 'auto' : 'metadata'}
       loop={mode === 'loop'}
       autoPlay={mode === 'loop'}
       // Decorative — hidden from assistive tech.

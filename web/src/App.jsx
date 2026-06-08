@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense } from 'react'
+import { useRef, lazy, Suspense } from 'react'
 
 import Cursor from './components/Cursor.jsx'
 import TopBar from './components/TopBar.jsx'
@@ -24,26 +24,20 @@ const JourneyOrb = lazy(() => import('./components/JourneyOrb.jsx'))
 
 export default function App() {
   const progressRef = useRef({ value: 0 })
-  const { progress } = useScrollProgress()
-  const scrolledRef = useRef(false)
+  const progressFillRef = useRef(null)
 
   // Lenis writes smooth scroll progress directly into progressRef (zero React state, zero lag).
   useLenis(progressRef)
 
-  // Only toggle the body class when crossing the threshold, not on every
-  // re-render — avoids hitting the DOM each time `progress` updates.
-  useEffect(() => {
-    const shouldScroll = progress > 0.04
-    if (shouldScroll === scrolledRef.current) return
-    scrolledRef.current = shouldScroll
-    document.body.classList.toggle('scrolled', shouldScroll)
-  }, [progress])
+  // Drives the progress bar + body.scrolled class straight to the DOM every
+  // frame — no React state, so the App tree never re-renders on scroll.
+  useScrollProgress(progressFillRef)
 
   return (
     <>
       <Loader />
       <TopBar />
-      <Progress value={progress} />
+      <Progress ref={progressFillRef} />
       {/* JourneyOrb is a 2nd WebGL context that fetches a remote HDR, builds a
           PMREM and renders at 60fps continuously. On Android it competes with
           the hero video for the GPU and was the main cause of the hero freeze,

@@ -1,32 +1,38 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect } from 'react'
 
 /**
- * Returns:
- * - progress: 0..1 across full scroll height (smoothed)
+ * Drives scroll-progress UI WITHOUT any React state, so it never re-renders the
+ * App tree on scroll (which was stealing frame budget during the gesture,
+ * especially on Android). Every frame it writes the smoothed 0..1 progress
+ * straight into the DOM:
+ *   - the progress bar fill's scaleX (via `fillRef`)
+ *   - the `scrolled` class on <body> (crossing a 0.04 threshold)
  *
- * Updates state only when the smoothed progress crosses an epsilon, so we
- * don't trigger 60Hz re-renders of the entire App tree just to track scroll.
+ * `fillRef` is an optional ref to the .progress__fill element.
  */
-export function useScrollProgress() {
-  const [progress, setProgress] = useState(0)
-  const raw = useRef(0)
-  const smoothed = useRef(0)
-  const lastReported = useRef(0)
-
+export function useScrollProgress(fillRef) {
   useEffect(() => {
     let rafId
+    let raw = 0
+    let smoothed = 0
+    let scrolled = false
+
     const onScroll = () => {
       const h = document.documentElement.scrollHeight - window.innerHeight
-      raw.current = h > 0 ? window.scrollY / h : 0
+      raw = h > 0 ? window.scrollY / h : 0
     }
     const tick = () => {
-      smoothed.current += (raw.current - smoothed.current) * 0.12
-      // Only push to React state if the value changed enough to matter visually.
-      // 0.005 ≈ half a percent — coarse enough to avoid every-frame churn.
-      if (Math.abs(smoothed.current - lastReported.current) > 0.005) {
-        lastReported.current = smoothed.current
-        setProgress(smoothed.current)
+      smoothed += (raw - smoothed) * 0.12
+
+      const fill = fillRef?.current
+      if (fill) fill.style.transform = `scaleX(${smoothed})`
+
+      const shouldScroll = smoothed > 0.04
+      if (shouldScroll !== scrolled) {
+        scrolled = shouldScroll
+        document.body.classList.toggle('scrolled', shouldScroll)
       }
+
       rafId = requestAnimationFrame(tick)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -36,7 +42,5 @@ export function useScrollProgress() {
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(rafId)
     }
-  }, [])
-
-  return { progress }
+  }, [fillRef])
 }
