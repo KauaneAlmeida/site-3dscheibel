@@ -57,16 +57,27 @@ export function useLenis(progressRef) {
       const onLoad = () => ScrollTrigger.refresh()
       window.addEventListener('load', onLoad)
 
-      // ResizeObserver on <body> catches every layout shift (GLB renders,
-      // image decodes, font metric updates). Throttled to one refresh per RAF.
-      let pending = false
+      // ResizeObserver on <body> catches layout shifts (image decodes, font
+      // metric updates). DEBOUNCED + gated: a running hero video and the mobile
+      // URL-bar collapse fire this constantly, and an unthrottled
+      // ScrollTrigger.refresh() (recomputes every pin) on each tick was a
+      // feedback loop that froze scroll on Android. We refresh only on a real
+      // layout change — a WIDTH change, or a HEIGHT GROWTH > 100px (a late
+      // asset pushing content down) — debounced 150ms. Small height jitter
+      // (URL bar show/hide, video repaint) is ignored.
+      let debounceId
+      let lastWidth = document.body.clientWidth
+      let lastHeight = document.body.scrollHeight
       const ro = new ResizeObserver(() => {
-        if (pending) return
-        pending = true
-        requestAnimationFrame(() => {
-          pending = false
-          ScrollTrigger.refresh()
-        })
+        const w = document.body.clientWidth
+        const h = document.body.scrollHeight
+        const widthChanged = w !== lastWidth
+        const heightGrew = h - lastHeight > 100
+        if (!widthChanged && !heightGrew) return
+        lastWidth = w
+        lastHeight = h
+        clearTimeout(debounceId)
+        debounceId = setTimeout(() => ScrollTrigger.refresh(), 150)
       })
       ro.observe(document.body)
 
@@ -76,6 +87,7 @@ export function useLenis(progressRef) {
 
       return () => {
         refreshTimers.forEach(clearTimeout)
+        clearTimeout(debounceId)
         ro.disconnect()
         window.removeEventListener('load', onLoad)
         window.removeEventListener('scroll', onScroll)

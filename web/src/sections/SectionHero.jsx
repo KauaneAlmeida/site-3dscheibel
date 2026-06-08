@@ -1,10 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import SphereHero from '../components/SphereHero.jsx'
 import VideoLayer from '../components/VideoLayer.jsx'
 import { IS_ANDROID } from '../lib/isAndroid.js'
 gsap.registerPlugin(ScrollTrigger)
+
+// Lazy so the Three.js sphere code splits into its own chunk that Android
+// (which renders the video instead) never downloads or parses.
+const SphereHero = lazy(() => import('../components/SphereHero.jsx'))
 
 export default function SectionHero() {
   const root = useRef()
@@ -31,7 +34,9 @@ export default function SectionHero() {
           />
         </div>
       ) : (
-        <SphereHero />
+        <Suspense fallback={null}>
+          <SphereHero />
+        </Suspense>
       )}
 
       {/* Top-left small label */}

@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 
 import Cursor from './components/Cursor.jsx'
 import TopBar from './components/TopBar.jsx'
 import Loader from './components/Loader.jsx'
-import JourneyOrb from './components/JourneyOrb.jsx'
 import Progress from './components/Progress.jsx'
 
 import SectionHero from './sections/SectionHero.jsx'
@@ -17,6 +16,11 @@ import Marquee from './sections/Marquee.jsx'
 
 import { useScrollProgress } from './hooks/useScrollProgress.js'
 import { useLenis } from './hooks/useLenis.js'
+import { IS_ANDROID } from './lib/isAndroid.js'
+
+// Lazy so the orb's Three.js + drei Environment code splits into a chunk that
+// Android (which doesn't render the orb) never downloads or parses.
+const JourneyOrb = lazy(() => import('./components/JourneyOrb.jsx'))
 
 export default function App() {
   const progressRef = useRef({ value: 0 })
@@ -40,8 +44,15 @@ export default function App() {
       <Loader />
       <TopBar />
       <Progress value={progress} />
-      {/* Golden orb stays on every device, including Android. */}
-      <JourneyOrb />
+      {/* JourneyOrb is a 2nd WebGL context that fetches a remote HDR, builds a
+          PMREM and renders at 60fps continuously. On Android it competes with
+          the hero video for the GPU and was the main cause of the hero freeze,
+          so it's desktop/iOS only. */}
+      {IS_ANDROID ? null : (
+        <Suspense fallback={null}>
+          <JourneyOrb />
+        </Suspense>
+      )}
 
       <main className="scroll-stack">
         <SectionHero />

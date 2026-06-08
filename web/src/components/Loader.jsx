@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { useProgress } from '@react-three/drei'
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { IS_ANDROID } from '../lib/isAndroid.js'
+
+// drei's useProgress lives in a lazy child so @react-three/drei (→ fiber →
+// three) is NOT pulled into the main bundle. Android never loads this.
+const DreiProgress = lazy(() => import('./DreiProgress.jsx'))
 
 /**
  * Loader — stays on screen until R3F finishes loading every asset (GLB
@@ -16,18 +19,21 @@ import { IS_ANDROID } from '../lib/isAndroid.js'
  * to false, so we never hide on the ghost.
  */
 export default function Loader() {
-  const { progress: realProgress, active } = useProgress()
   const [hide, setHide] = useState(false)
   const [displayed, setDisplayed] = useState(0)
   const reachedFull = useRef(false)
   const startedAt = useRef(performance.now())
   const realRef = useRef(0)
+  const activeRef = useRef(true)
+  // Bumped whenever drei reports, so the desktop hide-effect re-evaluates.
+  const [progressTick, setProgressTick] = useState(0)
 
-  useEffect(() => { realRef.current = realProgress }, [realProgress])
-
-  useEffect(() => {
-    if (realProgress >= 100) reachedFull.current = true
-  }, [realProgress])
+  const onDreiUpdate = useCallback((progress, active) => {
+    realRef.current = progress
+    activeRef.current = active
+    if (progress >= 100) reachedFull.current = true
+    setProgressTick((n) => n + 1)
+  }, [])
 
   // RAF loop — drives the displayed number every frame. The ghost moves
   // along an easing curve that approaches (but never reaches) 90% based on
@@ -53,10 +59,9 @@ export default function Loader() {
   }, [])
 
   // Android loads NO Three.js assets (GLBs/HDR are swapped for video), so
-  // useProgress never reaches 100 and `active` may stay false forever. Gating
-  // the hide on drei progress would leave the loader up until the 30s safety
-  // net — which is exactly the "page frozen at start, can't scroll" bug. So on
-  // Android we just hide after a short fixed settle once mounted.
+  // there is no drei progress to wait on. Gating the hide on it would leave
+  // the loader up until the safety net — the "page frozen at start, can't
+  // scroll" bug. So on Android we just hide after a short fixed settle.
   useEffect(() => {
     if (!IS_ANDROID) return
     setDisplayed(100)
@@ -69,10 +74,10 @@ export default function Loader() {
   useEffect(() => {
     if (IS_ANDROID) return
     if (!reachedFull.current) return
-    if (active) return
+    if (activeRef.current) return
     const t = setTimeout(() => setHide(true), 600)
     return () => clearTimeout(t)
-  }, [active, realProgress])
+  }, [progressTick])
 
   // Safety net — 30s max (desktop/iOS only; Android hides on its own timer).
   useEffect(() => {
@@ -83,6 +88,11 @@ export default function Loader() {
 
   return (
     <div className={`loader ${hide ? 'hidden' : ''}`}>
+      {!IS_ANDROID && (
+        <Suspense fallback={null}>
+          <DreiProgress onUpdate={onDreiUpdate} />
+        </Suspense>
+      )}
       <div className="loader__text">Carregando experiência…</div>
       <div className="loader__bar">
         <div

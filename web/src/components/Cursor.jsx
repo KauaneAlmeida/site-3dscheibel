@@ -7,6 +7,11 @@ export default function Cursor() {
   const ringPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Touch devices have no cursor — bail before starting the per-frame RAF so
+    // it isn't burning a frame budget slot on mobile for an invisible element.
+    const isTouch = matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches
+    if (isTouch) return
+
     const onMove = (e) => {
       target.current.x = e.clientX
       target.current.y = e.clientY

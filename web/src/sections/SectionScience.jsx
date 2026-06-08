@@ -1,11 +1,14 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import DnaScene from '../components/DnaScene.jsx'
 import VideoLayer from '../components/VideoLayer.jsx'
 import ScienceConstellations from '../components/ScienceConstellations.jsx'
 import { IS_ANDROID } from '../lib/isAndroid.js'
 gsap.registerPlugin(ScrollTrigger)
+
+// Lazy so the Three.js DNA code splits into its own chunk that Android (which
+// renders the scrub video instead) never downloads or parses.
+const DnaScene = lazy(() => import('../components/DnaScene.jsx'))
 
 // Background colour keyframes (brown -> navy -> green), same as the desktop
 // timeline below, expressed as a helper for the Android scrub timeline.
@@ -275,7 +278,9 @@ export default function SectionScience() {
               className="dna-video"
             />
           ) : (
-            <DnaScene progressRef={sectionProgressRef} />
+            <Suspense fallback={null}>
+              <DnaScene progressRef={sectionProgressRef} />
+            </Suspense>
           )}
         </div>
 
