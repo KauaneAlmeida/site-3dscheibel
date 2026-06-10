@@ -2373,13 +2373,8 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   /* Screens — horizontal swipe carousel on mobile (scroll-snap, native).
      Each phone snaps to centre with a generous gap and a slim peek of the
      neighbours, so the user understands there's more to swipe through.
-     The closing wedge is HIDDEN on touch (it duplicated the Partners photo);
-     a bottom gradient on .section-screens fades into Partners instead. */
-  .section-screens {
-    background:
-      radial-gradient(ellipse 80% 60% at 60% 50%, rgba(50, 160, 100, 0.28) 0%, transparent 70%),
-      linear-gradient(180deg, #03100a 0%, #0d1f17 30%, #03100a 88%, rgba(3, 16, 10, 0) 100%);
-  }
+     The closing wedge stays visible (handles the diagonal transition into
+     Partners). */
   .screens-head { margin-bottom: 5vh; }
   .screens-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
   .screens-stage {
@@ -2534,18 +2529,9 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
    touch; the seam-matching it bought is a desktop-only nicety.
    ────────────────────────────────────────────────────────────────────────── */
 @media (hover: none), (pointer: coarse) {
-  .section-partners {
-    background-attachment: scroll !important;
-  }
-  /* The rising wedge paints the SAME doctor photo as the Partners section
-     below it. On desktop `background-attachment: fixed` pixel-aligns the two
-     so they read as one continuous image. On touch that fixed alignment is
-     impossible (it's forced to `scroll`), so the wedge photo and the Partners
-     photo no longer line up — you see the doctor photo twice, the "duplicated"
-     strip over the surgery video. Drop the wedge entirely on touch and let
-     Partners own the single, clean photo. */
+  .section-partners,
   .screens-wedge {
-    display: none !important;
+    background-attachment: scroll !important;
   }
   /* 20 blurred fragments animating forever cost composite work in the
      481–768px band where many Androids land. Hide them on touch. */
