@@ -542,6 +542,10 @@ a, button {
   position: relative;
   isolation: isolate;
   z-index: 1;
+  /* Keep the absolutely-positioned phone (and its reveal/float transforms)
+     clipped to this section so it can never bleed the app screenshot up into
+     the Partners/surgery photo below on short iPhone viewports. */
+  overflow: hidden;
 }
 /* Soft black fade at the top to mask the seam against the previous section */
 .section-app::before {
@@ -2374,19 +2378,27 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .screens-head { margin-bottom: 5vh; }
   .screens-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
   .screens-stage {
+    /* --carousel-phone-w MUST equal the actual .phone width at this breakpoint
+       so the symmetric padding centres the first/last card exactly. It is
+       overridden in the <=480px block where the phone shrinks. */
+    --carousel-phone-w: 220px;
     flex-direction: row !important;
+    align-items: center;
     gap: 6vw;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    /* Symmetric horizontal padding lets first and last items reach centre.
-       Width 220px (mobile phone), so we want ~(viewport - 220) / 2 padding
-       on each side. We use viewport units to stay responsive. */
-    padding: 2rem calc((100vw - 220px) / 2) 3rem;
+    /* Symmetric horizontal padding lets first and last items reach centre:
+       (viewport - phone width) / 2 on each side. */
+    padding: 2rem max(4vw, calc((100vw - var(--carousel-phone-w)) / 2)) 3rem;
     margin: 0 -5vw;
     scrollbar-width: none;
-    touch-action: pan-x pan-y;
+    /* pan-x only: the horizontal strip owns horizontal gestures, vertical
+       gestures pass through to the page so the user can still scroll down
+       even with a finger starting inside the carousel. */
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
   }
   .screens-stage::-webkit-scrollbar { display: none; }
   .screens-item {
@@ -2467,6 +2479,9 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .phone { width: 200px; height: 420px; padding: 12px; border-radius: 32px; }
   .phone__notch { width: 78px; height: 18px; top: 12px; }
   .phone__screen { border-radius: 24px; }
+  /* Keep the carousel centring math in sync with the shrunk phone so the
+     first/last card lands dead-centre on small iPhones (SE, mini). */
+  .screens-stage { --carousel-phone-w: 200px; }
   .ph-screen { padding: 42px 16px 16px; gap: 10px; }
   .ph-card__big { font-size: 1.4rem; }
   .ph-stat__num { font-size: 0.92rem; }
@@ -2523,5 +2538,18 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .app-fragments,
   .app-fragments-right {
     display: none !important;
+  }
+
+  /* Disguise the seam between the Science section (ends on a dark
+     amber/green tone) and the App section ("Aqui está.") on small screens.
+     A taller, opaque-at-top gradient bridges the luminance jump so the hard
+     horizontal line in the screenshot reads as a smooth fade instead. */
+  .section-app::before {
+    height: 32vh;
+    background: linear-gradient(180deg,
+      #0a0703 0%,
+      rgba(10, 7, 3, 0.7) 30%,
+      rgba(13, 31, 23, 0.4) 65%,
+      rgba(13, 31, 23, 0) 100%);
   }
 }
