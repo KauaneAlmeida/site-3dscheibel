@@ -2375,7 +2375,7 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
      neighbours, so the user understands there's more to swipe through.
      The closing wedge is HIDDEN on touch (it duplicated the Partners photo);
      the Partners section's own clip-path diagonal handles the transition. */
-  .screens-head { margin-bottom: 5vh; }
+  .screens-head { margin-bottom: 5vh; padding: 0 5vw; }
   .screens-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
   .screens-stage {
     /* --carousel-phone-w MUST equal the actual .phone width at this breakpoint
@@ -2390,9 +2390,11 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     /* Symmetric horizontal padding lets first and last items reach centre:
-       (viewport - phone width) / 2 on each side. */
-    padding: 2rem max(4vw, calc((100vw - var(--carousel-phone-w)) / 2)) 3rem;
-    margin: 0 -5vw;
+       (viewport - phone width) / 2 on each side. NO negative side margin —
+       the parent .section-screens has overflow:hidden, so a negative margin
+       pushed the first/last card into the clipped zone and they vanished. */
+    padding: 2rem calc((100vw - var(--carousel-phone-w)) / 2) 3rem;
+    margin: 0;
     scrollbar-width: none;
     /* pan-x only: the horizontal strip owns horizontal gestures, vertical
        gestures pass through to the page so the user can still scroll down
@@ -2543,24 +2545,28 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .screens-wedge {
     display: none !important;
   }
-  /* Dark-green breathing room below the carousel: extra bottom padding gives a
-     calm scroll runway into the photo and — crucially — fills the corner that
-     the Partners clip-path cuts away with this section's own green, instead of
-     the page's beige body background showing through. */
+  /* Dark-green breathing room below the carousel. The extra bottom padding is
+     also the GREEN BACKDROP behind the Partners diagonal: the Partners section
+     is pulled up to overlap it (margin-top), so when its clip-path cuts the top
+     corner away, the gap reveals THIS section's green — never the page's beige
+     body background. The overlap (28vh) must exceed the deepest clip cut so no
+     beige can leak through at any point of the scroll animation. */
   .section-screens {
-    padding-bottom: 16vh;
+    /* Zero side padding so the carousel can span the full viewport width and
+       its symmetric (100vw - phone)/2 centring math is exact. The head gets its
+       own side padding below. overflow:hidden stays, but with no negative
+       margins on the strip nothing leaks into the clipped zone. */
+    padding: 14vh 0 28vh;
     background:
       radial-gradient(ellipse 80% 60% at 60% 50%, rgba(50, 160, 100, 0.28) 0%, transparent 70%),
       linear-gradient(180deg, #03100a 0%, #0d1f17 30%, #03100a 100%);
   }
   .section-partners {
     clip-path: polygon(0% 6vh, 100% 0%, 100% 100%, 0% 100%);
-    margin-top: -6vh;
-    padding-top: calc(18vh + 6vh);
-    /* The clipped-off corner reveals whatever is behind this section. Paint a
-       dark-green backdrop there (matching .section-screens) so the cut reads as
-       green, never the beige body background. */
-    background-color: #03100a;
+    /* Overlap the green runway above by more than the deepest clip cut (22vh
+       in the GSAP reveal) so the cut corner always lands on green. */
+    margin-top: -28vh;
+    padding-top: calc(18vh + 28vh);
   }
   /* 20 blurred fragments animating forever cost composite work in the
      481–768px band where many Androids land. Hide them on touch. */
