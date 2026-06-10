@@ -2373,8 +2373,8 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   /* Screens — horizontal swipe carousel on mobile (scroll-snap, native).
      Each phone snaps to centre with a generous gap and a slim peek of the
      neighbours, so the user understands there's more to swipe through.
-     The closing wedge stays visible (handles the diagonal transition into
-     Partners). */
+     The closing wedge is HIDDEN on touch (it duplicated the Partners photo);
+     the Partners section's own clip-path diagonal handles the transition. */
   .screens-head { margin-bottom: 5vh; }
   .screens-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
   .screens-stage {
@@ -2529,9 +2529,24 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
    touch; the seam-matching it bought is a desktop-only nicety.
    ────────────────────────────────────────────────────────────────────────── */
 @media (hover: none), (pointer: coarse) {
-  .section-partners,
-  .screens-wedge {
+  .section-partners {
     background-attachment: scroll !important;
+  }
+  /* The rising wedge and the Partners section paint the SAME doctor photo.
+     On desktop `background-attachment: fixed` pins both to the viewport so they
+     line up pixel-for-pixel and read as ONE continuous image revealed by a
+     diagonal. On touch `fixed` is forced to `scroll`, so the two photos sit at
+     different scroll offsets and you see the doctor photo TWICE — the screen
+     "opens" into a second copy of the same image. Drop the wedge photo on
+     touch and give the Partners section its own diagonal top edge, so there's a
+     single clean photo with the same angled reveal as desktop. */
+  .screens-wedge {
+    display: none !important;
+  }
+  .section-partners {
+    clip-path: polygon(0% 6vh, 100% 0%, 100% 100%, 0% 100%);
+    margin-top: -6vh;
+    padding-top: calc(18vh + 6vh);
   }
   /* 20 blurred fragments animating forever cost composite work in the
      481–768px band where many Androids land. Hide them on touch. */
