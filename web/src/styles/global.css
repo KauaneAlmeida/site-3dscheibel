@@ -2543,10 +2543,24 @@ body.scrolled .section-nav { opacity: 1; pointer-events: auto; }
   .screens-wedge {
     display: none !important;
   }
+  /* Dark-green breathing room below the carousel: extra bottom padding gives a
+     calm scroll runway into the photo and — crucially — fills the corner that
+     the Partners clip-path cuts away with this section's own green, instead of
+     the page's beige body background showing through. */
+  .section-screens {
+    padding-bottom: 16vh;
+    background:
+      radial-gradient(ellipse 80% 60% at 60% 50%, rgba(50, 160, 100, 0.28) 0%, transparent 70%),
+      linear-gradient(180deg, #03100a 0%, #0d1f17 30%, #03100a 100%);
+  }
   .section-partners {
     clip-path: polygon(0% 6vh, 100% 0%, 100% 100%, 0% 100%);
     margin-top: -6vh;
     padding-top: calc(18vh + 6vh);
+    /* The clipped-off corner reveals whatever is behind this section. Paint a
+       dark-green backdrop there (matching .section-screens) so the cut reads as
+       green, never the beige body background. */
+    background-color: #03100a;
   }
   /* 20 blurred fragments animating forever cost composite work in the
      481–768px band where many Androids land. Hide them on touch. */
